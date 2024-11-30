@@ -103,7 +103,7 @@ def main():
 
     # Count non-empty bins
     non_empty_bins = sum(1 for bin_id, items in bin_assignments.items() if items)
-    totcost += k * non_empty_bins
+    totcost += k * non_empty_bins    
 
     print("\n\nPackages not assigned to any ULD: ")
 
@@ -133,8 +133,17 @@ def main():
                 # Update bin assignments if package was assigned
                 bin_assignments[uld_id].append(package_id)
 
-    print("\n\nOVERALL SPACE UTILISATION: ")
+    lines = []
+    
+    line = ""
+    line += str(totcost) + ","
+    tot_packed = len(packages) - tot_unpacked
+    line += str(tot_packed) + ","
+    line += str(non_empty_bins)
+    lines.append(line)  
 
+    print("\n\nOVERALL SPACE UTILISATION: ")
+    
     for uld in ulds:
         # Get the packages already assigned to this ULD
         already_assigned = bin_assignments.get(uld['id'], [])
@@ -148,10 +157,13 @@ def main():
         )
 
     print("\nTotal cost: ", totcost)
-    print("Total unpacked items: ", tot_unpacked)
+    print("Total unpacked items: ", tot_unpacked)    
     
     stop = time.time()
     print('Time Taken: ', stop - start)
+    
+    with open('output.txt', 'w') as file:
+        file.writelines(lines)
 
 if __name__ == "__main__":
     main()

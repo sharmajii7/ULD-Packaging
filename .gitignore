@@ -10,3 +10,11 @@ setup.py
 venv
 debug.log
 test*
+output.txt
+Challange_FedEx_test.py
+priority_v1.py
+priority_v2.py
+priority_v3.py
+priority_v4.py
+subroutine.py
+visualisation.py
