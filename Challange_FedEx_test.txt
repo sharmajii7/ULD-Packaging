@@ -1,0 +1,32 @@
+For the challenge problem, we have 6 ULDs available and 400 packages that need
+to be loaded.
+
+K = 5000, i.e. cost of spreading Priority Packages in multiple ULDs is 5000 x
+(number of ULDs that have Priority Packages).
+
+ULD attributes (comma separated values) are as follows:
+ULD Identifier,Length (cm),Width (cm),Height (cm),Weight Limit (kg)
+U1,224,318,162,2500
+
+Package attributes (comma separated values) are as follows:
+Package Identifier,Length (cm),Width (cm),Height (cm),Weight (kg),Type (P/E),Cost of Delay
+P-1,99,53,55,61,Economy,176
+P-2,56,99,81,53,Priority,-
+P-3,42,101,51,17,Priority,-
+P-4,108,75,56,73,Economy,138
+P-5,88,58,64,93,Economy,139
+P-6,91,56,84,47,Priority,-
+P-7,88,78,93,117,Economy,102
+P-8,108,105,76,142,Economy,108
+P-9,73,71,88,50,Priority,-
+P-10,88,70,85,81,Priority,-
+P-11,55,80,81,23,Economy,96
+P-12,48,80,88,27,Economy,117
+P-13,55,94,87,41,Economy,73
+P-14,45,46,81,27,Economy,68
+P-15,84,49,60,57,Priority,-
+P-16,48,93,63,82,Priority,-
+P-17,83,63,57,29,Priority,-
+P-18,68,101,95,96,Economy,65
+P-19,51,87,69,73,Economy,107
+P-20,88,106,56,71,Priority,-
