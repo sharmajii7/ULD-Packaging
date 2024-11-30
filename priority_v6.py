@@ -1,8 +1,9 @@
 import time
 import concurrent.futures
 from subroutine_v2 import subroutine
-from economyassign import economyassign
+from economyassign_v2 import economyassign
 from visualisation_v2 import visualisation
+from spaceutilisation import spaceutilisation
 
 def parse_file(filename):
     ulds = []
@@ -85,7 +86,13 @@ def main():
 
     # Sort ULDs and packages
     ulds.sort(key=lambda u: -u['volume'])
-    packages.sort(key=lambda p: (p['type'] != "Priority", -p['delaycost']))
+    # packages.sort(key=lambda p: (p['type'] != "Priority", -p['delaycost']))
+    packages.sort(
+        key=lambda p: (
+            p['type'] != "Priority",  # Sort Priority packages first
+            -p['volume'] if p['type'] == "Priority" else -p['delaycost']  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+        )
+    )
     packids = [pkg['id'] for pkg in packages]
 
     # Count Priority packages
@@ -98,7 +105,54 @@ def main():
     print("SPACE UTILISATION BY PRIORITY PACKAGES: ")
 
     # Call subroutine with only Priority packages
-    unpacked_count, bin_assignments = subroutine(ulds=ulds, packages=priority_packages, packids=priority_packids)
+    # unpacked_count, bin_assignments = subroutine(ulds=ulds, packages=priority_packages, packids=priority_packids)
+    
+    bin_assignments = {}
+    
+    for uld in ulds:
+        bin_assignments[uld['id']] = []
+    
+    for i in range(priority_count):
+        current_package = packages[i]  # The current package to assign
+        assigned = False  # Track if the package has been assigned
+
+        for uld in ulds:  # Check each ULD individually
+            # Get the packages already assigned to this ULD
+            already_assigned = bin_assignments.get(uld['id'], [])
+            assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
+
+            # Add the current package to the assigned list temporarily
+            assigned_packages.append(current_package)
+
+            # Call subroutine with this ULD and the combined packages
+            unpacked_count = economyassign(
+                ulds=[uld],  # Use the current ULD
+                packages=assigned_packages,  # Include already assigned + current package
+                packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+            )
+
+            # If all items are packed successfully (no unpacked items), assign the package
+            if unpacked_count == 0:
+                bin_assignments[uld['id']].append(current_package['id'])  # Update the assignments
+                assigned = True
+                break  # No need to check further ULDs for this package
+
+        # If the package was not assigned to any ULD
+        if not assigned:
+            unpacked_count += 1
+            print(f"Priority package {current_package['id']} could not be assigned to any ULD.")
+            
+    for uld in ulds:
+        # Get the packages already assigned to this ULD
+        already_assigned = bin_assignments.get(uld['id'], [])
+        assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
+
+        # Call spaceutilisation for each ULD
+        spaceutilisation(
+            ulds=[uld],
+            packages=assigned_packages,
+            packids=[pkg['id'] for pkg in assigned_packages]
+        )
     print("Number of priority packages not packed: ", unpacked_count)
 
     # Count non-empty bins

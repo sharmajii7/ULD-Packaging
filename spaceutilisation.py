@@ -1,6 +1,6 @@
 from py3dbp import Packer, Bin, Item, Painter
 
-def visualisation(ulds, packages, packids):
+def spaceutilisation(ulds, packages, packids):
     # Initialize the packer
     packer = Packer()
 
@@ -25,8 +25,6 @@ def visualisation(ulds, packages, packids):
         number_of_decimals=0
     )
 
-    lines = []
-
     repeated = ''
     for b in packer.bins:
         print(b.partno)
@@ -34,29 +32,10 @@ def visualisation(ulds, packages, packids):
 
         volume_t = 0
         for item in b.items:
-            line = ""
             if packids.count(item.partno) != 0:
                 packids.remove(item.partno)
             else:
                 repeated += '{}, '.format(item.partno)
-            originpos = item.position
-            rotationtype = item.rotation_type
-            line = str(item.partno) + "," + str(b.partno) + ","
-            line += str(originpos[0]) + "," + str(originpos[1]) + "," + str(originpos[2]) + ","
-            if(rotationtype == 0):
-                line += str(originpos[0] + item.width) + "," + str(originpos[1] + item.height) + "," + str(originpos[2] + item.depth) + "\n"
-            elif(rotationtype == 1):
-                line += str(originpos[0] + item.height) + "," + str(originpos[1] + item.width) + "," + str(originpos[2] + item.depth) + "\n"
-            elif(rotationtype == 2):
-                line += str(originpos[0] + item.depth) + "," + str(originpos[1] + item.width) + "," + str(originpos[2] + item.height) + "\n"
-            elif(rotationtype == 3):
-                line += str(originpos[0] + item.depth) + "," + str(originpos[1] + item.height) + "," + str(originpos[2] + item.width) + "\n"
-            elif(rotationtype == 4):
-                line += str(originpos[0] + item.height) + "," + str(originpos[1] + item.depth) + "," + str(originpos[2] + item.width) + "\n"
-            else:
-                line += str(originpos[0] + item.width) + "," + str(originpos[1] + item.depth) + "," + str(originpos[2] + item.height) + "\n"
-                
-            lines.append(line)
             volume_t += float(item.width) * float(item.height) * float(item.depth)
 
         volume_f = 0
@@ -69,14 +48,4 @@ def visualisation(ulds, packages, packids):
         print('unpack item volume: ', volume_f)
         print("gravity distribution: ", b.gravity)
         print("***************************************************")
-
-        painter = Painter(b)
-        fig = painter.plotBoxAndItems(
-            title=b.partno,
-            alpha=0.8,
-            write_num=False,
-            fontsize=10
-        )
-        fig.show()
         
-    return lines
