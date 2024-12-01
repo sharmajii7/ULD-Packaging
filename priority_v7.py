@@ -30,6 +30,8 @@ def parse_file(filename):
                 })
             if line.startswith("P"):
                 parts = line.split(',')
+                # if(parts[5] == 'Priority'):
+                #     continue
                 packages.append({
                     'id': parts[0],
                     'length': int(parts[1]),
@@ -112,6 +114,12 @@ def main():
     for uld in ulds:
         bin_assignments[uld['id']] = []
     
+
+    # temp = []
+    # for i in range(4):
+    #     temp.append(ulds[i])
+    # for i in range(4):
+    #     ulds[i] = temp[4-i-1]
     for i in range(priority_count):
         current_package = packages[i]  # The current package to assign
         assigned = False  # Track if the package has been assigned
@@ -153,7 +161,7 @@ def main():
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages]
         )
-    print("Number of priority packages not packed: ", unpacked_count)
+    # print("Number of priority packages not packed: ", unpacked_count)
 
     # Count non-empty bins
     non_empty_bins = sum(1 for bin_id, items in bin_assignments.items() if items)

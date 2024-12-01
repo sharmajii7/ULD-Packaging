@@ -48,11 +48,11 @@ def visualisation(ulds, packages, packids):
             elif(rotationtype == 1):
                 line += str(originpos[0] + item.height) + "," + str(originpos[1] + item.width) + "," + str(originpos[2] + item.depth) + "\n"
             elif(rotationtype == 2):
-                line += str(originpos[0] + item.depth) + "," + str(originpos[1] + item.width) + "," + str(originpos[2] + item.height) + "\n"
+                line += str(originpos[0] + item.height) + "," + str(originpos[1] + item.depth) + "," + str(originpos[2] + item.width) + "\n"
             elif(rotationtype == 3):
                 line += str(originpos[0] + item.depth) + "," + str(originpos[1] + item.height) + "," + str(originpos[2] + item.width) + "\n"
             elif(rotationtype == 4):
-                line += str(originpos[0] + item.height) + "," + str(originpos[1] + item.depth) + "," + str(originpos[2] + item.width) + "\n"
+                line += str(originpos[0] + item.depth) + "," + str(originpos[1] + item.width) + "," + str(originpos[2] + item.height) + "\n"
             else:
                 line += str(originpos[0] + item.width) + "," + str(originpos[1] + item.depth) + "," + str(originpos[2] + item.height) + "\n"
                 
@@ -74,7 +74,7 @@ def visualisation(ulds, packages, packids):
         fig = painter.plotBoxAndItems(
             title=b.partno,
             alpha=0.8,
-            write_num=False,
+            write_num=True,
             fontsize=10
         )
         fig.show()
