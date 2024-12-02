@@ -85,12 +85,18 @@ def main():
     ulds, packages, k = parse_file(filename)
 
     # Sort ULDs and packages
-    ulds.sort(key=lambda u: -u['volume'])
+    ulds.sort(key=lambda u: (-u['volume'], -u['weightlimit']))
     # packages.sort(key=lambda p: (p['type'] != "Priority", -p['delaycost']))
+    # packages.sort(
+    #     key=lambda p: (
+    #         p['type'] != "Priority",  # Sort Priority packages first
+    #         -p['volume'] if p['type'] == "Priority" else -((p['delaycost'] * p['delaycost']) / (p['weight'] * p['volume']))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+    #     )
+    # )
     packages.sort(
         key=lambda p: (
             p['type'] != "Priority",  # Sort Priority packages first
-            -p['volume'] if p['type'] == "Priority" else -p['delaycost']  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+            -p['volume'] if p['type'] == "Priority" else -((p['delaycost'] * p['delaycost'] * p['delaycost']) / (p['volume'] * p['weight']))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
         )
     )
     packids = [pkg['id'] for pkg in packages]
@@ -115,6 +121,11 @@ def main():
     for i in range(priority_count):
         current_package = packages[i]  # The current package to assign
         assigned = False  # Track if the package has been assigned
+
+        # # Sort ULDs by least available volume
+        # ulds.sort(
+        #     key=lambda u: -(sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
+        # )
 
         for uld in ulds:  # Check each ULD individually
             # Get the packages already assigned to this ULD
@@ -167,6 +178,11 @@ def main():
     for i in range(priority_count, len(packids)):
         current_package = packages[i]  # The current package to assign
         assigned = False  # Track if the package has been assigned
+        
+        # Sort ULDs by least available volume
+        ulds.sort(
+            key=lambda u: -(sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
+        )
 
         for uld in ulds:  # Check each ULD individually
             # Get the packages already assigned to this ULD
