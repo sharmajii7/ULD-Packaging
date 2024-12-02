@@ -168,7 +168,7 @@ def main():
     print('Time Taken: ', stop - start)
     
     alllines = sorted(alllines, key=lambda x: int(x.split(',')[0].split('-')[1]))
-    with open('output.txt', 'w') as file:
+    with open('output.txt', 'w+') as file:
         file.write(firstline)
         file.writelines(alllines)
 

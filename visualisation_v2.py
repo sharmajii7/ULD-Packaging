@@ -74,7 +74,7 @@ def visualisation(ulds, packages, packids):
         fig = painter.plotBoxAndItems(
             title=b.partno,
             alpha=0.8,
-            write_num=False,
+            write_num=True,
             fontsize=10
         )
         fig.show()
