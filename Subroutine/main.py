@@ -91,13 +91,18 @@ class ULD:
 
 
     def getTotalWeight(self):
-        ''' '''
+        '''Calculate the total weight of all packages and return it formatted to a specified number of decimal places.'''
+        
+        # Initialize total weight to zero.
         total_weight = 0
 
+        # Iterate over all packages to accumulate their weights.
         for package in self.packages:
             total_weight += package.weight
 
+        # Format the total weight to the specified number of decimal places.
         return set2Decimal(total_weight, self.number_of_decimals)
+
 
 
     def putPackage(self, package, pivot):
@@ -155,7 +160,7 @@ class ULD:
                         support_area_upper = 0
                         for i in self.fit_packages:
                             # Verify that the lower support surface area is greater than the upper support surface area * support_surface_ratio.
-                            if z == i[5]  :
+                            if z == i[5]:
                                 area = len(set([ j for j in range(int(x),int(x+int(w)))]) & set([ j for j in range(int(i[0]),int(i[1]))])) * \
                                 len(set([ j for j in range(int(y),int(y+int(h)))]) & set([ j for j in range(int(i[2]),int(i[3]))]))
                                 support_area_upper += area
@@ -166,11 +171,11 @@ class ULD:
                             #  If any vertices is not supported, fit = False.
                             c = [False,False,False,False]
                             for i in self.fit_packages:
-                                if z == i[5] :
+                                if z == i[5]:
                                     for jdx,j in enumerate(four_vertices) :
                                         if (i[0] <= j[0] <= i[1]) and (i[2] <= j[1] <= i[3]) :
                                             c[jdx] = True
-                            if False in c :
+                            if False in c:
                                 package.position = valid_package_position
                                 fit = False
                                 return fit
@@ -193,70 +198,111 @@ class ULD:
 
 
     def checkDepth(self, unfix_point):
-        ''' fix package position z '''
-        z_ = [[0,0],[float(self.depth),float(self.depth)]]
+        '''Fix package position on the z-axis to avoid overlap with already placed packages.'''
+        
+        # Initialize z range (min and max) for checking placement.
+        z_ranges = [[0, 0], [float(self.depth), float(self.depth)]]
+
+        # Iterate through already placed packages.
         for j in self.fit_packages:
-            # creat x set
-            x_bottom = set([i for i in range(int(j[0]),int(j[1]))])
-            x_top = set([i for i in range(int(unfix_point[0]),int(unfix_point[1]))])
-            # creat y set
-            y_bottom = set([i for i in range(int(j[2]),int(j[3]))])
-            y_top = set([i for i in range(int(unfix_point[2]),int(unfix_point[3]))])
-            # find intersection on x set and y set.
-            if len(x_bottom & x_top) != 0 and len(y_bottom & y_top) != 0 :
-                z_.append([float(j[4]),float(j[5])])
+            # Create x and y sets for the current package and the new package (unfix_point).
+            x_bottom = set(range(int(j[0]), int(j[1])))
+            x_top = set(range(int(unfix_point[0]), int(unfix_point[1])))
+            y_bottom = set(range(int(j[2]), int(j[3])))
+            y_top = set(range(int(unfix_point[2]), int(unfix_point[3])))
+
+            # Check if there is an overlap in both x and y dimensions.
+            if len(x_bottom & x_top) != 0 and len(y_bottom & y_top) != 0:
+                # Add z range of the current package to the list for sorting later.
+                z_ranges.append([float(j[4]), float(j[5])])
+
+        # Calculate the available depth for the new package.
         top_depth = unfix_point[5] - unfix_point[4]
-        # find diff set on z_.
-        z_ = sorted(z_, key = lambda z_ : z_[1])
-        for j in range(len(z_)-1):
-            if z_[j+1][0] -z_[j][1] >= top_depth:
-                return z_[j][1]
+
+        # Sort the z ranges by the end of the z range.
+        z_ranges = sorted(z_ranges, key=lambda z_range: z_range[1])
+
+        # Iterate through sorted z ranges to check if there's enough space for the new package.
+        for j in range(len(z_ranges) - 1):
+            # If the gap between two consecutive packages is large enough, return the position.
+            if z_ranges[j + 1][0] - z_ranges[j][1] >= top_depth:
+                return z_ranges[j][1]
+
+        # If no gap is found, return the starting z position of the new package.
         return unfix_point[4]
 
 
+
     def checkWidth(self, unfix_point):
-        ''' fix package position x ''' 
-        x_ = [[0,0],[float(self.width),float(self.width)]]
+        '''Fix package position on the x-axis to avoid overlap with already placed packages.'''
+        
+        # Initialize the x range (min and max) for checking placement.
+        x_ranges = [[0, 0], [float(self.width), float(self.width)]]
+
+        # Iterate through already placed packages.
         for j in self.fit_packages:
-            # creat z set
-            z_bottom = set([i for i in range(int(j[4]),int(j[5]))])
-            z_top = set([i for i in range(int(unfix_point[4]),int(unfix_point[5]))])
-            # creat y set
-            y_bottom = set([i for i in range(int(j[2]),int(j[3]))])
-            y_top = set([i for i in range(int(unfix_point[2]),int(unfix_point[3]))])
-            # find intersection on z set and y set.
-            if len(z_bottom & z_top) != 0 and len(y_bottom & y_top) != 0 :
-                x_.append([float(j[0]),float(j[1])])
+            # Create z and y sets for the current package and the new package (unfix_point).
+            z_bottom = set(range(int(j[4]), int(j[5])))
+            z_top = set(range(int(unfix_point[4]), int(unfix_point[5])))
+            y_bottom = set(range(int(j[2]), int(j[3])))
+            y_top = set(range(int(unfix_point[2]), int(unfix_point[3])))
+
+            # Check if there is an overlap in both z and y dimensions.
+            if len(z_bottom & z_top) != 0 and len(y_bottom & y_top) != 0:
+                # Add x range of the current package to the list for sorting later.
+                x_ranges.append([float(j[0]), float(j[1])])
+
+        # Calculate the available width for the new package.
         top_width = unfix_point[1] - unfix_point[0]
-        # find diff set on x_bottom and x_top.
-        x_ = sorted(x_,key = lambda x_ : x_[1])
-        for j in range(len(x_)-1):
-            if x_[j+1][0] -x_[j][1] >= top_width:
-                return x_[j][1]
+
+        # Sort the x ranges by the end of the x range.
+        x_ranges = sorted(x_ranges, key=lambda x_range: x_range[1])
+
+        # Iterate through sorted x ranges to check if there's enough space for the new package.
+        for j in range(len(x_ranges) - 1):
+            # If the gap between two consecutive packages is large enough, return the position.
+            if x_ranges[j + 1][0] - x_ranges[j][1] >= top_width:
+                return x_ranges[j][1]
+
+        # If no gap is found, return the starting x position of the new package.
         return unfix_point[0]
+
     
 
     def checkHeight(self, unfix_point):
-        '''fix package position y '''
-        y_ = [[0,0],[float(self.height),float(self.height)]]
-        for j in self.fit_packages:
-            # creat x set
-            x_bottom = set([i for i in range(int(j[0]),int(j[1]))])
-            x_top = set([i for i in range(int(unfix_point[0]),int(unfix_point[1]))])
-            # creat z set
-            z_bottom = set([i for i in range(int(j[4]),int(j[5]))])
-            z_top = set([i for i in range(int(unfix_point[4]),int(unfix_point[5]))])
-            # find intersection on x set and z set.
-            if len(x_bottom & x_top) != 0 and len(z_bottom & z_top) != 0 :
-                y_.append([float(j[2]),float(j[3])])
-        top_height = unfix_point[3] - unfix_point[2]
-        # find diff set on y_bottom and y_top.
-        y_ = sorted(y_,key = lambda y_ : y_[1])
-        for j in range(len(y_)-1):
-            if y_[j+1][0] - y_[j][1] >= top_height:
-                return y_[j][1]
+        '''Fix package position on the y-axis to avoid overlap with already placed packages.'''
 
+        # Initialize y range (min and max) for checking placement.
+        y_ranges = [[0, 0], [float(self.height), float(self.height)]]
+
+        # Iterate through already placed packages.
+        for j in self.fit_packages:
+            # Create x and z sets for the current package and the new package (unfix_point).
+            x_bottom = set(range(int(j[0]), int(j[1])))
+            x_top = set(range(int(unfix_point[0]), int(unfix_point[1])))
+            z_bottom = set(range(int(j[4]), int(j[5])))
+            z_top = set(range(int(unfix_point[4]), int(unfix_point[5])))
+
+            # Check if there is an overlap in the x and z dimensions.
+            if len(x_bottom & x_top) != 0 and len(z_bottom & z_top) != 0:
+                # Add y range of the current package to the list for sorting later.
+                y_ranges.append([float(j[2]), float(j[3])])
+
+        # Calculate the available height for the new package.
+        top_height = unfix_point[3] - unfix_point[2]
+
+        # Sort the y_ranges by the end of the y range.
+        y_ranges = sorted(y_ranges, key=lambda y_range: y_range[1])
+
+        # Iterate through sorted y ranges to check if there's enough space for the new package.
+        for j in range(len(y_ranges) - 1):
+            # If the gap between two consecutive packages is large enough, return the top position.
+            if y_ranges[j + 1][0] - y_ranges[j][1] >= top_height:
+                return y_ranges[j][1]
+
+        # If no gap is found, return the starting y position of the new package.
         return unfix_point[2]
+
 
 
 class Assigner:
@@ -277,168 +323,184 @@ class Assigner:
         return self.packages.append(package)
 
 
-    def pack2ULD(self, ULD, package,fix_point,check_stable,support_surface_ratio):
-        ''' pack package to ULD '''
+    def pack2ULD(self, ULD, package, fix_point, check_stable, support_surface_ratio):
+        ''' Pack package to ULD '''
         fitted = False
         ULD.fix_point = fix_point
         ULD.check_stable = check_stable
         ULD.support_surface_ratio = support_surface_ratio
 
+        # If the ULD is empty, directly try placing the package
         if not ULD.packages:
             response = ULD.putPackage(package, package.position)
             if not response:
                 ULD.unfitted_packages.append(package)
-                return
             return
 
-        for axis in range(0, 3):
-            packages_in_ULD = ULD.packages
-            for ib in packages_in_ULD:
-                pivot = [0, 0, 0]
+        # Try to place the package in all possible positions by iterating over the axes
+        for axis in range(3):
+            for ib in ULD.packages:
                 w, h, d = ib.getDimension()
+
+                # Determine the pivot position based on the axis
                 if axis == Axis.WIDTH:
-                    pivot = [ib.position[0] + w,ib.position[1],ib.position[2]]
+                    pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
                 elif axis == Axis.HEIGHT:
-                    pivot = [ib.position[0],ib.position[1] + h,ib.position[2]]
+                    pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
                 elif axis == Axis.DEPTH:
-                    pivot = [ib.position[0],ib.position[1],ib.position[2] + d]
-                    
+                    pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
+
+                # Try to place the package at the new pivot position
                 if ULD.putPackage(package, pivot):
                     fitted = True
                     break
+
             if fitted:
                 break
+
+        # If the package could not be placed, add it to unfitted packages
         if not fitted:
             ULD.unfitted_packages.append(package)
-            return
+
 
 
     def putOrder(self):
-        '''Arrange the order of packages '''
+        '''Arrange the order of packages'''
         for i in self.ULDs:
-            i.packages.sort(key=lambda package: package.position[1], reverse=False)
-            i.packages.sort(key=lambda package: package.position[2], reverse=False)
-            i.packages.sort(key=lambda package: package.position[0], reverse=False)
+            # Sort packages by position in all three dimensions (x, y, z)
+            i.packages.sort(key=lambda package: (package.position[1], package.position[2], package.position[0]))
         return
 
 
-    def gravityCenter(self,ULD):
-        ''' 
-        Deviation Of Cargo gravity distribution
-        ''' 
-        w = int(ULD.width)
-        h = int(ULD.height)
 
-        area1 = [set(range(0,w//2+1)),set(range(0,h//2+1)),0]
-        area2 = [set(range(w//2+1,w+1)),set(range(0,h//2+1)),0]
-        area3 = [set(range(0,w//2+1)),set(range(h//2+1,h+1)),0]
-        area4 = [set(range(w//2+1,w+1)),set(range(h//2+1,h+1)),0]
-        area = [area1,area2,area3,area4]
+    def gravityCenter(self, ULD):
+        """Calculate the deviation of cargo gravity distribution across the ULD.
 
-        for i in ULD.packages:
-            x_st = int(i.position[0])
-            y_st = int(i.position[1])
-            if i.rotation_type == 0:
-                x_ed = int(i.position[0] + i.width)
-                y_ed = int(i.position[1] + i.height)
-            elif i.rotation_type == 1:
-                x_ed = int(i.position[0] + i.height)
-                y_ed = int(i.position[1] + i.width)
-            elif i.rotation_type == 2:
-                x_ed = int(i.position[0] + i.height)
-                y_ed = int(i.position[1] + i.depth)
-            elif i.rotation_type == 3:
-                x_ed = int(i.position[0] + i.depth)
-                y_ed = int(i.position[1] + i.height)
-            elif i.rotation_type == 4:
-                x_ed = int(i.position[0] + i.depth)
-                y_ed = int(i.position[1] + i.width)
-            elif i.rotation_type == 5:
-                x_ed = int(i.position[0] + i.width)
-                y_ed = int(i.position[1] + i.depth)
+        Parameters:
+        ULD : object
+            The ULD object containing the packages to be processed.
+        
+        Returns:
+        list
+            The gravity distribution percentages for the four areas of the ULD.
+        """
+        w, h = int(ULD.width), int(ULD.height)
 
-            x_set = set(range(x_st,int(x_ed)+1))
-            y_set = set(range(y_st,y_ed+1))
+        # Define the four areas of the ULD as lists of sets
+        areas = [
+            [set(range(0, w // 2 + 1)), set(range(0, h // 2 + 1)), 0],
+            [set(range(w // 2 + 1, w + 1)), set(range(0, h // 2 + 1)), 0],
+            [set(range(0, w // 2 + 1)), set(range(h // 2 + 1, h + 1)), 0],
+            [set(range(w // 2 + 1, w + 1)), set(range(h // 2 + 1, h + 1)), 0]
+        ]
 
-            # cal gravity distribution
-            for j in range(len(area)):
-                if x_set.issubset(area[j][0]) and y_set.issubset(area[j][1]) : 
-                    area[j][2] += int(i.weight)
+        # Process each package in the ULD
+        for package in ULD.packages:
+            x_st, y_st = int(package.position[0]), int(package.position[1])
+            if package.rotation_type == 0:
+                x_ed, y_ed = int(package.position[0] + package.width), int(package.position[1] + package.height)
+            elif package.rotation_type == 1:
+                x_ed, y_ed = int(package.position[0] + package.height), int(package.position[1] + package.width)
+            elif package.rotation_type == 2:
+                x_ed, y_ed = int(package.position[0] + package.height), int(package.position[1] + package.depth)
+            elif package.rotation_type == 3:
+                x_ed, y_ed = int(package.position[0] + package.depth), int(package.position[1] + package.height)
+            elif package.rotation_type == 4:
+                x_ed, y_ed = int(package.position[0] + package.depth), int(package.position[1] + package.width)
+            elif package.rotation_type == 5:
+                x_ed, y_ed = int(package.position[0] + package.width), int(package.position[1] + package.depth)
+
+            # Define the x and y ranges for the current package
+            x_set, y_set = set(range(x_st, int(x_ed) + 1)), set(range(y_st, int(y_ed) + 1))
+
+            # Calculate the gravity distribution across the four areas
+            for idx, area in enumerate(areas):
+                area_x, area_y = area[0], area[1]  # Extract the sets for x and y ranges
+                if x_set.issubset(area_x) and y_set.issubset(area_y):
+                    area[2] += int(package.weight)
                     break
-                # include x and !include y
-                elif x_set.issubset(area[j][0]) == True and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0 : 
-                    y = len(y_set & area[j][1]) / (y_ed - y_st) * int(i.weight)
-                    area[j][2] += y
-                    if j >= 2 :
-                        area[j-2][2] += (int(i.weight) - x)
-                    else :
-                        area[j+2][2] += (int(i.weight) - y)
+                elif x_set.issubset(area_x) and not y_set.issubset(area_y) and len(y_set & area_y) != 0:
+                    y_weight = len(y_set & area_y) / (y_ed - y_st) * int(package.weight)
+                    area[2] += y_weight
+                    areas[idx - 2 if idx >= 2 else idx + 2][2] += (int(package.weight) - y_weight)
                     break
-                # include y and !include x
-                elif x_set.issubset(area[j][0]) == False and y_set.issubset(area[j][1]) == True and len(x_set & area[j][0]) != 0 : 
-                    x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
-                    area[j][2] += x
-                    if j >= 2 :
-                        area[j-2][2] += (int(i.weight) - x)
-                    else :
-                        area[j+2][2] += (int(i.weight) - x)
+                elif not x_set.issubset(area_x) and y_set.issubset(area_y) and len(x_set & area_x) != 0:
+                    x_weight = len(x_set & area_x) / (x_ed - x_st) * int(package.weight)
+                    area[2] += x_weight
+                    areas[idx - 2 if idx >= 2 else idx + 2][2] += (int(package.weight) - x_weight)
                     break
-                # !include x and !include y
-                elif x_set.issubset(area[j][0])== False and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0  and len(x_set & area[j][0]) != 0 :
-                    all = (y_ed - y_st) * (x_ed - x_st)
-                    y = len(y_set & area[0][1])
-                    y_2 = y_ed - y_st - y
-                    x = len(x_set & area[0][0])
-                    x_2 = x_ed - x_st - x
-                    area[0][2] += x * y / all * int(i.weight)
-                    area[1][2] += x_2 * y / all * int(i.weight)
-                    area[2][2] += x * y_2 / all * int(i.weight)
-                    area[3][2] += x_2 * y_2 / all * int(i.weight)
+                elif not x_set.issubset(area_x) and not y_set.issubset(area_y) and len(y_set & area_y) != 0 and len(x_set & area_x) != 0:
+                    total_area = (y_ed - y_st) * (x_ed - x_st)
+                    y_part = len(y_set & area_y)
+                    y_2 = (y_ed - y_st) - y_part
+                    x_part = len(x_set & area_x)
+                    x_2 = (x_ed - x_st) - x_part
+                    area[2] += x_part * y_part / total_area * int(package.weight)
+                    areas[1][2] += x_2 * y_part / total_area * int(package.weight)
+                    areas[2][2] += x_part * y_2 / total_area * int(package.weight)
+                    areas[3][2] += x_2 * y_2 / total_area * int(package.weight)
                     break
-            
-        r = [area[0][2],area[1][2],area[2][2],area[3][2]]
-        result = []
-        for i in r :
-            if sum(r) == 0:
-                result.append(0)  # Append 0 if the sum is zero to avoid division by zero
-            else:
-                result.append(round(i / sum(r) * 100, 2))
-        return result
+
+        # Calculate the gravity distribution percentages for each area
+        total_weight = sum(area[2] for area in areas)
+        if total_weight == 0:
+            return [0, 0, 0, 0]
+
+        return [round(area[2] / total_weight * 100, 2) for area in areas]
 
 
-    def pack(self,fix_point=True,check_stable=True,support_surface_ratio=0.6,number_of_decimals=0):
-        '''pack master func '''
-        # set decimals
+
+
+    def pack(self, fix_point=True, check_stable=True, support_surface_ratio=0.6, number_of_decimals=0):
+        """ Main packing function for packing packages into ULDs.
+
+        Parameters:
+        fix_point : bool, optional
+            Whether to fix the point during the packing process (default is True).
+        check_stable : bool, optional
+            Whether to check the stability of the packing (default is True).
+        support_surface_ratio : float, optional
+            Ratio of the support surface, affecting package fitting (default is 0.6).
+        number_of_decimals : int, optional
+            Number of decimals to format the numbers (default is 0).
+        """
+        # Format numbers for ULDs and packages
         for ULD in self.ULDs:
             ULD.formatNumbers(number_of_decimals)
-
+        
         for package in self.packages:
             package.formatNumbers(number_of_decimals)
-        # ULD : sorted by volumn
+
+        # Sort ULDs by volume in descending order
         self.ULDs.sort(key=lambda ULD: ULD.getVolume(), reverse=True)
-        # Package : sorted by volumn -> sorted by loadbear
+
+        # Sort packages first by volume, then by load-bearing capacity
         self.packages.sort(key=lambda package: package.getVolume(), reverse=True)
         self.packages.sort(key=lambda package: package.loadbear, reverse=True)
 
-        for idx,ULD in enumerate(self.ULDs):
-            # pack package to ULD
+        # Pack packages into ULDs
+        for idx, ULD in enumerate(self.ULDs):
             for package in self.packages:
                 self.pack2ULD(ULD, package, fix_point, check_stable, support_surface_ratio)
-                if(len(ULD.unfitted_packages) != 0):
+                
+                # If there are still unfitted packages, stop the packing process
+                if len(ULD.unfitted_packages) != 0:
                     return
-            
-            # Deviation Of Cargo Gravity Center 
+
+            # Update the gravity center of the ULD after packing
             self.ULDs[idx].gravity = self.gravityCenter(ULD)
-            
+
+            # Remove packed packages from the available list
             for bpackage in ULD.packages:
-                no = bpackage.partno
-                for package in self.packages :
-                    if package.partno == no :
+                partno = bpackage.partno
+                for package in self.packages:
+                    if package.partno == partno:
                         self.packages.remove(package)
                         break
 
-        # put order of packages
+        # Arrange the order of packages
         self.putOrder()
+
 
 
 
@@ -452,26 +514,32 @@ class Plotter:
         self.depth = ULDs.depth
 
 
-    def _plotCube(self, ax, x, y, z, dx, dy, dz, color='red',mode=2,linewidth=1,text="",fontsize=15,alpha=0.5):
-        """ Auxiliary function to plot a cube. code taken somewhere from the web.  """
-        xx = [x, x, x+dx, x+dx, x]
-        yy = [y, y+dy, y+dy, y, y]
+    def _plotCube(self, ax, x, y, z, dx, dy, dz, color='red', mode=2, linewidth=1, text="", fontsize=15, alpha=0.5):
+        """ Auxiliary function to plot a cube. Code adapted from a web source. """
         
-        kwargs = {'alpha': 1, 'color': color,'linewidth':linewidth }
-        if mode == 1 :
-            ax.plot3D(xx, yy, [z]*5, **kwargs)
-            ax.plot3D(xx, yy, [z+dz]*5, **kwargs)
-            ax.plot3D([x, x], [y, y], [z, z+dz], **kwargs)
-            ax.plot3D([x, x], [y+dy, y+dy], [z, z+dz], **kwargs)
-            ax.plot3D([x+dx, x+dx], [y+dy, y+dy], [z, z+dz], **kwargs)
-            ax.plot3D([x+dx, x+dx], [y, y], [z, z+dz], **kwargs)
-        else :
-            p = Rectangle((x,y),dx,dy,fc=color,ec='black',alpha = alpha)
-            p2 = Rectangle((x,y),dx,dy,fc=color,ec='black',alpha = alpha)
-            p3 = Rectangle((y,z),dy,dz,fc=color,ec='black',alpha = alpha)
-            p4 = Rectangle((y,z),dy,dz,fc=color,ec='black',alpha = alpha)
-            p5 = Rectangle((x,z),dx,dz,fc=color,ec='black',alpha = alpha)
-            p6 = Rectangle((x,z),dx,dz,fc=color,ec='black',alpha = alpha)
+        xx = [x, x, x + dx, x + dx, x]
+        yy = [y, y + dy, y + dy, y, y]
+        
+        kwargs = {'alpha': 1, 'color': color, 'linewidth': linewidth}
+        
+        if mode == 1:
+            # Drawing edges of the cube
+            ax.plot3D(xx, yy, [z] * 5, **kwargs)
+            ax.plot3D(xx, yy, [z + dz] * 5, **kwargs)
+            ax.plot3D([x, x], [y, y], [z, z + dz], **kwargs)
+            ax.plot3D([x, x], [y + dy, y + dy], [z, z + dz], **kwargs)
+            ax.plot3D([x + dx, x + dx], [y + dy, y + dy], [z, z + dz], **kwargs)
+            ax.plot3D([x + dx, x + dx], [y, y], [z, z + dz], **kwargs)
+        else:
+            # Plotting the faces of the cube using rectangles
+            p = Rectangle((x, y), dx, dy, fc=color, ec='black', alpha=alpha)
+            p2 = Rectangle((x, y), dx, dy, fc=color, ec='black', alpha=alpha)
+            p3 = Rectangle((y, z), dy, dz, fc=color, ec='black', alpha=alpha)
+            p4 = Rectangle((y, z), dy, dz, fc=color, ec='black', alpha=alpha)
+            p5 = Rectangle((x, z), dx, dz, fc=color, ec='black', alpha=alpha)
+            p6 = Rectangle((x, z), dx, dz, fc=color, ec='black', alpha=alpha)
+            
+            # Adding the patches to the plot
             ax.add_patch(p)
             ax.add_patch(p2)
             ax.add_patch(p3)
@@ -479,52 +547,70 @@ class Plotter:
             ax.add_patch(p5)
             ax.add_patch(p6)
             
-            if text != "":
-                ax.text( (x+ dx/2), (y+ dy/2), (z+ dz/2), str(text),color='black', fontsize=fontsize, ha='center', va='center')
-
+            # Adding text label if provided
+            if text:
+                ax.text(
+                    (x + dx / 2), (y + dy / 2), (z + dz / 2), str(text),
+                    color='black', fontsize=fontsize, ha='center', va='center'
+                )
+            
+            # Converting 2D patches to 3D
             art3d.pathpatch_2d_to_3d(p, z=z, zdir="z")
-            art3d.pathpatch_2d_to_3d(p2, z=z+dz, zdir="z")
+            art3d.pathpatch_2d_to_3d(p2, z=z + dz, zdir="z")
             art3d.pathpatch_2d_to_3d(p3, z=x, zdir="x")
             art3d.pathpatch_2d_to_3d(p4, z=x + dx, zdir="x")
             art3d.pathpatch_2d_to_3d(p5, z=y, zdir="y")
             art3d.pathpatch_2d_to_3d(p6, z=y + dy, zdir="y")
 
-    def plotBoxAndPackages(self,title="",alpha=0.2,write_num=False,fontsize=10):
-        """ side effective. Plot the ULD and the packages it contains. """
+
+    def plotBoxAndPackages(self, title="", alpha=0.2, write_num=False, fontsize=10):
+        """ Plots the ULD and the packages it contains. """
         axGlob = plt.axes(projection='3d')
         
-        # plot ULD 
-        self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
+        # Plot ULD (Unit Load Device)
+        self._plotCube(
+            axGlob, 0, 0, 0, float(self.width), float(self.height), float(self.depth),
+            color='black', mode=1, linewidth=2, text=""
+        )
 
+        # Plot each package
         counter = 0
-        # fit rotation type
         for package in self.packages:
-            x,y,z = package.position
-            [w,h,d] = package.getDimension()
+            x, y, z = package.position
+            w, h, d = package.getDimension()
             color = package.color
-            text= package.partno if write_num else ""
-
-            self._plotCube(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
+            text = package.partno if write_num else ""
             
-            counter += 1  
+            self._plotCube(
+                axGlob, float(x), float(y), float(z), float(w), float(h), float(d),
+                color=color, mode=2, text=text, fontsize=fontsize, alpha=alpha
+            )
+            
+            counter += 1
 
-        
+        # Set plot title and adjust axes
         plt.title(title)
         self.setAxesEqual(axGlob)
+        
         return plt
 
 
-    def setAxesEqual(self,ax):
-        '''Make axes of 3D plot have equal scale so that spheres appear as spheres,
-        cubes as cubes, etc..  This is one possible solution to Matplotlib's
-        ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
 
-        Input
-        ax: a matplotlib axis, e.g., as output from plt.gca().'''
+    def setAxesEqual(self, ax):
+        """ Adjusts the axes of a 3D plot to have equal scale, ensuring that 
+        spheres appear as spheres and cubes as cubes, addressing limitations 
+        with ax.set_aspect('equal') and ax.axis('equal') in 3D plots.
+
+        Parameters:
+        ax : matplotlib axis
+            The 3D axis object (e.g., output from plt.gca()).
+        """
+        # Get axis limits for x, y, and z
         x_limits = ax.get_xlim3d()
         y_limits = ax.get_ylim3d()
         z_limits = ax.get_zlim3d()
 
+        # Calculate ranges and middle points for each axis
         x_range = abs(x_limits[1] - x_limits[0])
         x_middle = np.mean(x_limits)
         y_range = abs(y_limits[1] - y_limits[0])
@@ -532,11 +618,12 @@ class Plotter:
         z_range = abs(z_limits[1] - z_limits[0])
         z_middle = np.mean(z_limits)
 
-        # The plot bounding box is a sphere in the sense of the infinity
-        # norm, hence I call half the max range the plot radius.
-        plot_radius = 0.5 * max([x_range, y_range, z_range])
+        # Define the plot radius as half of the maximum range
+        plot_radius = 0.5 * max(x_range, y_range, z_range)
 
+        # Set equal limits for all axes, centered around the middle points
         ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
         ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
 

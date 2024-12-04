@@ -120,8 +120,8 @@ def main(x = 5, y = 2, z = 1):
     start = time.time()
 
     # Parse the input file
-    filename = "Challange_FedEx_test.txt"
-    # filename = "Challange_FedEx.txt"
+    # filename = "Challange_FedEx_test.txt"
+    filename = "Challange_FedEx.txt"
     ulds, packages, k = parse_file(filename)
 
     # Sort ULDs and packages
