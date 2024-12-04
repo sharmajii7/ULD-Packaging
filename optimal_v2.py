@@ -92,7 +92,7 @@ def main(x, y, z):
     packages.sort(
         key=lambda p: (
             p['type'] != "Priority",  # Sort Priority packages first
-            -p['volume'] if p['type'] == "Priority" else -(pow(p['delaycost'], x) / (pow(p['volume'], y) * pow(p['weight'], z)))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+            -(max(p['length'], p['height'], p['width'])) if p['type'] == "Priority" else -(pow(p['delaycost'], x) / (pow(p['volume'], y) * pow(p['weight'], z)))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
         )
     )
     packids = [pkg['id'] for pkg in packages]
@@ -176,9 +176,9 @@ def main(x, y, z):
         assigned = False  # Track if the package has been assigned
         
         # Sort ULDs by least available volume
-        ulds.sort(
-            key=lambda u: -(u['volume'] - sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
-        )
+        # ulds.sort(
+        #     key=lambda u: -(u['volume'] - sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
+        # )
 
         for uld in ulds:  # Check each ULD individually
             # Get the packages already assigned to this ULD

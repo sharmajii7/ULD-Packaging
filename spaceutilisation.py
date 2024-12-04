@@ -11,9 +11,14 @@ def spaceutilisation(ulds, packages, packids):
 
     # Add packages (items) to the packer
     for package in packages:
-        packer.addItem(Item(partno=package['id'], name=package['id'], typeof='cube', 
+        if(package['type'] == "Priority"):
+            packer.addItem(Item(partno=package['id'], name=package['id'], typeof='cube', 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], level=1, loadbear=100, updown=True, color='#FFFF37'))
+                            weight=package['weight'], level=1, loadbear=100, updown=True, color='olive'))
+        else:
+            packer.addItem(Item(partno=package['id'], name=package['id'], typeof='cube', 
+                            WHD=(package['length'], package['width'], package['height']),
+                            weight=package['weight'], level=1, loadbear=100, updown=True, color='pink'))
 
     # Calculate packing 
     packer.pack(

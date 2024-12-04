@@ -1,7 +1,5 @@
-import time
 from economyassign_v2 import economyassign
-from visualisation_v2 import visualisation
-from spaceutilisation import spaceutilisation
+import math
 
 def parse_file(filename):
     ulds = []
@@ -75,8 +73,8 @@ def assign_package_to_uld(current_package, ulds, bin_assignments, all_packages):
     # If package was not assigned to any ULD
     return (current_package['id'], None, current_package['delaycost'])
 
-def main(x = 5, y = 2, z = 1, w = 1, d = 1):
-    start = time.time()
+def main(x, y, z, w, d):
+    # start = time.time()
 
     # Parse the input file
     filename = "Challange_FedEx.txt"
@@ -88,25 +86,25 @@ def main(x = 5, y = 2, z = 1, w = 1, d = 1):
     # packages.sort(
     #     key=lambda p: (
     #         p['type'] != "Priority",  # Sort Priority packages first
-    #         -(pow(p['volume'], w) * pow(p['weight'], d)) if p['type'] == "Priority" else -(pow(p['delaycost'], x) / (pow(p['volume'], y) * pow(p['weight'], z)))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+    #         -p['volume'] if p['type'] == "Priority" else -((p['delaycost'] * p['delaycost']) / (p['weight'] * p['volume']))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
     #     )
     # )
     packages.sort(
         key=lambda p: (
             p['type'] != "Priority",  # Sort Priority packages first
-            -(max(p['length'], p['height'], p['width'])) if p['type'] == "Priority" else -(pow(p['delaycost'], x) / (pow(p['volume'], y) * pow(p['weight'], z)))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
+            -(pow(p['volume'], w) * pow(p['weight'], d)) if p['type'] == "Priority" else -(pow(p['delaycost'], x) / (pow(p['volume'], y) * pow(p['weight'], z)))  # Sort by decreasing volume for Priority, and by decreasing delaycost for others
         )
     )
     packids = [pkg['id'] for pkg in packages]
 
     # Count Priority packages
     priority_count = sum(1 for pkg in packages if pkg['type'] == "Priority")
-    priority_packages = [pkg for pkg in packages if pkg['type'] == "Priority"]
-    priority_packids = [pkg['id'] for pkg in priority_packages]
+    # priority_packages = [pkg for pkg in packages if pkg['type'] == "Priority"]
+    # priority_packids = [pkg['id'] for pkg in priority_packages]
 
     totcost = 0
 
-    print("SPACE UTILISATION BY PRIORITY PACKAGES: ")
+    # print("SPACE UTILISATION BY PRIORITY PACKAGES: ")
 
     # Call subroutine with only Priority packages
     # unpacked_count, bin_assignments = subroutine(ulds=ulds, packages=priority_packages, packids=priority_packids)
@@ -151,101 +149,140 @@ def main(x = 5, y = 2, z = 1, w = 1, d = 1):
             unpacked_count += 1
             print(f"Priority package {current_package['id']} could not be assigned to any ULD.")
             
-    for uld in ulds:
-        # Get the packages already assigned to this ULD
-        already_assigned = bin_assignments.get(uld['id'], [])
-        assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
+    # for uld in ulds:
+    #     # Get the packages already assigned to this ULD
+    #     already_assigned = bin_assignments.get(uld['id'], [])
+    #     assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        # Call spaceutilisation for each ULD
-        spaceutilisation(
-            ulds=[uld],
-            packages=assigned_packages,
-            packids=[pkg['id'] for pkg in assigned_packages]
-        )
-    print("Number of priority packages not packed: ", unpacked_count)
+    #     # Call spaceutilisation for each ULD
+    #     spaceutilisation(
+    #         ulds=[uld],
+    #         packages=assigned_packages,
+    #         packids=[pkg['id'] for pkg in assigned_packages]
+    #     )
+    # print("Number of priority packages not packed: ", unpacked_count)
 
     # Count non-empty bins
     non_empty_bins = sum(1 for bin_id, items in bin_assignments.items() if items)
     totcost += k * non_empty_bins    
-
-    print("\n\nPackages not assigned to any ULD: ")
     
-    unpackedids = []
+    if(non_empty_bins < 4):
+        print(f"w: {w}\t d: {d}")
+        print("Number of acquired bins: ", non_empty_bins)
+        print("")
+
+    # print("\n\nPackages not assigned to any ULD: ")
+    
+    # unpackedids = []
                 
-    tot_unpacked = 0
-    for i in range(priority_count, len(packids)):
-        current_package = packages[i]  # The current package to assign
-        assigned = False  # Track if the package has been assigned
+    # tot_unpacked = 0
+    # for i in range(priority_count, len(packids)):
+    #     current_package = packages[i]  # The current package to assign
+    #     assigned = False  # Track if the package has been assigned
         
-        # Sort ULDs by least available volume
-        # ulds.sort(
-        #     key=lambda u: -(sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
-        # )
+    #     # Sort ULDs by least available volume
+    #     ulds.sort(
+    #         key=lambda u: -(u['volume'] - sum(pkg['volume'] for pkg in packages if pkg['id'] in bin_assignments[u['id']]))
+    #     )
 
-        for uld in ulds:  # Check each ULD individually
-            # Get the packages already assigned to this ULD
-            already_assigned = bin_assignments.get(uld['id'], [])
-            assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
+    #     for uld in ulds:  # Check each ULD individually
+    #         # Get the packages already assigned to this ULD
+    #         already_assigned = bin_assignments.get(uld['id'], [])
+    #         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-            # Add the current package to the assigned list temporarily
-            assigned_packages.append(current_package)
+    #         # Add the current package to the assigned list temporarily
+    #         assigned_packages.append(current_package)
 
-            # Call subroutine with this ULD and the combined packages
-            unpacked_count = economyassign(
-                ulds=[uld],  # Use the current ULD
-                packages=assigned_packages,  # Include already assigned + current package
-                packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
-            )
+    #         # Call subroutine with this ULD and the combined packages
+    #         unpacked_count = economyassign(
+    #             ulds=[uld],  # Use the current ULD
+    #             packages=assigned_packages,  # Include already assigned + current package
+    #             packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+    #         )
 
-            # If all items are packed successfully (no unpacked items), assign the package
-            if unpacked_count == 0:
-                bin_assignments[uld['id']].append(current_package['id'])  # Update the assignments
-                assigned = True
-                break  # No need to check further ULDs for this package
+    #         # If all items are packed successfully (no unpacked items), assign the package
+    #         if unpacked_count == 0:
+    #             bin_assignments[uld['id']].append(current_package['id'])  # Update the assignments
+    #             assigned = True
+    #             break  # No need to check further ULDs for this package
 
-        # If the package was not assigned to any ULD
-        if not assigned:
-            tot_unpacked += 1
-            unpackedids.append(current_package['id'])
-            totcost += current_package['delaycost']
+    #     # If the package was not assigned to any ULD
+    #     if not assigned:
+    #         tot_unpacked += 1
+    #         unpackedids.append(current_package['id'])
+    #         totcost += current_package['delaycost']
             # print(f"Package {current_package['id']} could not be assigned to any ULD.")
-            print(current_package['id'], end=", ", flush=True)
+            # print(current_package['id'], end=", ", flush=True)
     
-    tot_packed = len(packages) - tot_unpacked
-    firstline = str(totcost) + "," + str(tot_packed) + "," + str(non_empty_bins) + "\n"
+    # tot_packed = len(packages) - tot_unpacked
+    # firstline = str(totcost) + "," + str(tot_packed) + "," + str(non_empty_bins) + "\n"
 
-    print("\n\nOVERALL SPACE UTILISATION: ")
+    # print("\n\nOVERALL SPACE UTILISATION: ")
     
-    alllines = []
+    # alllines = []
     
     # Setting coordinates to -1 for unpacked items
-    for uld in unpackedids:
-        line = str(uld) + ",NONE,-1,-1,-1,-1,-1,-1\n"
-        alllines.append(line)
+    # for uld in unpackedids:
+    #     line = str(uld) + ",NONE,-1,-1,-1,-1,-1,-1\n"
+    #     alllines.append(line)
     
-    for uld in ulds:
-        # Get the packages already assigned to this ULD
-        already_assigned = bin_assignments.get(uld['id'], [])
-        assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
+    # for uld in ulds:
+    #     # Get the packages already assigned to this ULD
+    #     already_assigned = bin_assignments.get(uld['id'], [])
+    #     assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        # Call visualization for each ULD
-        lines = visualisation(
-            ulds=[uld],
-            packages=assigned_packages,
-            packids=[pkg['id'] for pkg in assigned_packages]
-        )
-        alllines.extend(lines)
+    #     # Call visualization for each ULD
+    #     lines = visualisation(
+    #         ulds=[uld],
+    #         packages=assigned_packages,
+    #         packids=[pkg['id'] for pkg in assigned_packages]
+    #     )
+    #     alllines.extend(lines)
 
-    print("\nTotal cost: ", totcost)
-    print("Total unpacked items: ", tot_unpacked)    
+    # print("Total cost: ", totcost)
+    # print("Total unpacked items: ", tot_unpacked)    
     
-    stop = time.time()
-    print('Time Taken: ', stop - start)
+    # stop = time.time()
+    # print('Time Taken: ', stop - start)
+    # print("")
     
-    alllines = sorted(alllines, key=lambda x: int(x.split(',')[0].split('-')[1]))
-    with open('output.txt', 'w') as file:
-        file.write(firstline)
-        file.writelines(alllines)
+    # alllines = sorted(alllines, key=lambda x: int(x.split(',')[0].split('-')[1]))
+    # with open('output.txt', 'w') as file:
+    #     file.write(firstline)
+    #     file.writelines(alllines)
 
 if __name__ == "__main__":
-    main(5, 2, 1, 1, 1)
+    i = 1
+    # startfrom = 1
+    # endat = 73
+    # startfrom = 74
+    # endat = 146
+    # startfrom = 147
+    # endat = 219
+    # startfrom = 220
+    # endat = 292
+    # startfrom = 293
+    # endat = 365
+    # startfrom = 366
+    # endat = 438
+    # startfrom = 439
+    # endat = 511
+    startfrom = 512
+    endat = 584
+    with open("casespriority_v2.txt", 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if(i >= startfrom and i <= endat):
+                parts = line.split(',')
+                w = int(parts[0])
+                d = int(parts[1])
+                main(6, 1, 1, w, d)
+            i += 1
+    # lines = []
+    # for i in range(-15, 16):
+    #     for j in range(-15, 16):
+    #         if(math.gcd(i, j) > 1):
+    #             continue
+    #         lines.append(str(i) + "," + str(j) + "\n")
+    # with open("casespriority_v2.txt", "w") as file:
+    #     file.writelines(lines)
