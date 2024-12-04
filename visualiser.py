@@ -1,5 +1,5 @@
 from Subroutine import Assigner, ULD, Package, Plotter
-
+import streamlit as st
 def visualiser(ulds, packages, packids):
     # Initialize the packer
     packer = Assigner()
@@ -32,7 +32,7 @@ def visualiser(ulds, packages, packids):
     # print("")
 
     lines = []
-
+    x = None
     repeated = ''
     for b in packer.ULDs:
         print(b.partno)
@@ -80,6 +80,7 @@ def visualiser(ulds, packages, packids):
             write_num=True,
             fontsize=10
         )
-        fig.show()
-        
-    return lines
+        # fig.show()
+        # if(len(list_)>=1):
+            # list_[len(list_)-1].empty()
+    return lines,fig

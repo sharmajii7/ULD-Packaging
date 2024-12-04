@@ -4,7 +4,7 @@ from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
 import copy
-
+import streamlit as st
 class Package:
     
     def __init__(self, partno, name, WHD, weight, loadbear, updown, color):
@@ -496,8 +496,12 @@ class Plotter:
         # plot ULD 
         self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
 
-        counter = 0
+        # counter = 0
         # fit rotation type
+        # list_ = list()
+        first = None
+        second = None
+        counter = 0
         for package in self.packages:
             x,y,z = package.position
             [w,h,d] = package.getDimension()
@@ -507,10 +511,19 @@ class Plotter:
             self._plotCube(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
             
             counter += 1  
-
-        
-        plt.title(title)
-        self.setAxesEqual(axGlob)
+            plt.title(title)
+            self.setAxesEqual(axGlob)
+            # plt.draw()
+            first = st.pyplot(plt)
+            
+            # print("after uld{}".format(uld))
+            # plt.pause(0.1)
+            if(second != None):
+                second.empty()
+            # if(counter<len(self.packages)-1):
+            second = first
+            # first.empty()
+            # plt.pause(0.2)
         return plt
 
 
