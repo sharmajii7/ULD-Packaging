@@ -3,11 +3,13 @@ import numpy as np
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
+import random
+from matplotlib.lines import Line2D
 import copy
 
 class Package:
     
-    def __init__(self, partno, name, WHD, weight, loadbear, updown, color):
+    def __init__(self, partno, name, WHD, weight, loadbear, updown, color, type="Economy"):
         ''' '''
         self.partno = partno
         self.name = name
@@ -21,6 +23,7 @@ class Package:
         self.rotation_type = 0
         self.position = [0, 0, 0]
         self.number_of_decimals = 0
+        self.type = type
 
 
     def formatNumbers(self, number_of_decimals):
@@ -564,7 +567,7 @@ class Plotter:
 
 
     def plotBoxAndPackages(self, title="", alpha=0.2, write_num=False, fontsize=10):
-        """ Plots the ULD and the packages it contains. """
+        """ Plots the ULD and the packages it contains with random colors. """
         axGlob = plt.axes(projection='3d')
         
         # Plot ULD (Unit Load Device)
@@ -573,12 +576,17 @@ class Plotter:
             color='black', mode=1, linewidth=2, text=""
         )
 
-        # Plot each package
+        # Create a legend list to track colors for the packages
+        legend_entries_priority = []
+        legend_entries_economy = []
+        
+        # Plot each package with a random color and add it to the legend
         counter = 0
         for package in self.packages:
             x, y, z = package.position
             w, h, d = package.getDimension()
-            color = package.color
+            # Generate a random color for each package
+            color = (random.random(), random.random(), random.random())  # RGB color
             text = package.partno if write_num else ""
             
             self._plotCube(
@@ -586,11 +594,47 @@ class Plotter:
                 color=color, mode=2, text=text, fontsize=fontsize, alpha=alpha
             )
             
+            # Add the package's color to the legend
+            if(package.type == "Priority"):
+                legend_entries_priority.append(Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10, label=str(package.partno)))
+            else:
+                legend_entries_economy.append(Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10, label=str(package.partno)))
+            
             counter += 1
 
         # Set plot title and adjust axes
         plt.title(title)
         self.setAxesEqual(axGlob)
+        
+        fig = plt.gcf()  # Get the current figure
+        fig.set_size_inches(8, 6)
+        
+        # Add the legend
+        first_legend = axGlob.legend(handles=legend_entries_priority, loc='upper center', fontsize=10, ncol=2, bbox_to_anchor=(-0.15, 1.15), borderaxespad=0.5, labelspacing=1.2, title='Priority Packages')
+        second_legend = axGlob.legend(handles=legend_entries_economy, loc='upper center', fontsize=10, ncol=2, bbox_to_anchor=(1.10, 1.15), borderaxespad=0.5, labelspacing=1.2, title='Economy Packages')
+        
+        axGlob.add_artist(first_legend)
+        axGlob.add_artist(second_legend)
+        # Remove the background color and the box around the plot
+        axGlob.set_facecolor('white')  # Set the axes background to white (or 'none' for transparent)
+
+        # Remove the grid
+        axGlob.grid(False)
+
+        # Remove the axis markers
+        axGlob.set_xticks([])  # Remove x-axis ticks
+        axGlob.set_yticks([])  # Remove y-axis ticks
+        axGlob.set_zticks([])  # Remove z-axis ticks
+
+        # Remove the axis lines (box)
+        axGlob.xaxis.pane.fill = False  # Hide x-axis background (pane)
+        axGlob.yaxis.pane.fill = False  # Hide y-axis background (pane)
+        axGlob.zaxis.pane.fill = False  # Hide z-axis background (pane)
+
+        # Hide axis lines (the box around the plot)
+        axGlob.xaxis.line.set_color('none')  # Remove x-axis line
+        axGlob.yaxis.line.set_color('none')  # Remove y-axis line
+        axGlob.zaxis.line.set_color('none')  # Remove z-axis line
         
         return plt
 
@@ -619,7 +663,7 @@ class Plotter:
         z_middle = np.mean(z_limits)
 
         # Define the plot radius as half of the maximum range
-        plot_radius = 0.5 * max(x_range, y_range, z_range)
+        plot_radius = 0.4 * max(x_range, y_range, z_range)
 
         # Set equal limits for all axes, centered around the middle points
         ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
