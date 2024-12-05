@@ -565,7 +565,6 @@ class Plotter:
             art3d.pathpatch_2d_to_3d(p5, z=y, zdir="y")
             art3d.pathpatch_2d_to_3d(p6, z=y + dy, zdir="y")
 
-
     def plotBoxAndPackages(self, title="", alpha=0.2, write_num=False, fontsize=10):
         """ Plots the ULD and the packages it contains with random colors. """
         axGlob = plt.axes(projection='3d')
@@ -581,12 +580,29 @@ class Plotter:
         legend_entries_economy = []
         
         # Plot each package with a random color and add it to the legend
+        incpri = 0.2
+        inceco = 0.2
         counter = 0
         for package in self.packages:
             x, y, z = package.position
             w, h, d = package.getDimension()
             # Generate a random color for each package
-            color = (random.random(), random.random(), random.random())  # RGB color
+            if(package.type == "Priority"):
+                red = 0
+                green = incpri
+                blue = 0
+                incpri += 0.05
+                if(incpri > 1):
+                    incpri = 0.225
+                color = (red, green, blue)
+            else:
+                red = inceco
+                green = 0 
+                blue = 0
+                inceco += 0.05
+                if(inceco > 1):
+                    inceco = 0.225
+                color = (red, green, blue)
             text = package.partno if write_num else ""
             
             self._plotCube(
