@@ -125,15 +125,18 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
     progress_bar.empty()
     status_text.empty()
 
+    uld_pack_desc = dict()
+
     for uld in ulds:
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        spaceUtilisation(
+        lines = spaceUtilisation(
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages]
         )
+        uld_pack_desc[uld['id']] = lines
 
     st.write(f"Number of priority packages not packed: {unpacked_count}")
 
@@ -180,7 +183,7 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
             tot_unpacked += 1
             unpackedids.append(current_package['id'])
             totcost += current_package['delaycost']
-            not_assigned_ids.append(f"{current_package['id']}", end=", ")
+            not_assigned_ids.append(f"{current_package['id']} ")
 
     progress_bar.empty()
     status_text.empty()
@@ -207,6 +210,8 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
         )
         uld_plot = st.pyplot(fig)
         alllines.extend(lines)
+        for line in uld_pack_desc[uld['id']]:
+            st.write(line)
         # time.sleep(0.5)
         # uld_plot.empty()
 

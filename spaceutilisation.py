@@ -14,11 +14,11 @@ def spaceUtilisation(ulds, packages, packids):
         if(package['type'] == "Priority"):
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='olive'))
+                            weight=package['weight'], loadbear=100, updown=True, color='olive',type='Priority'))
         else:
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='pink'))
+                            weight=package['weight'], loadbear=100, updown=True, color='pink',type='Economy'))
 
     # Calculate packing 
     packer.pack(
@@ -28,6 +28,7 @@ def spaceUtilisation(ulds, packages, packids):
     )
 
     repeated = ''
+    lines = []
     for b in packer.ULDs:
         print(b.partno)
         volume = b.width * b.height * b.depth
@@ -44,7 +45,10 @@ def spaceUtilisation(ulds, packages, packids):
             print(package.partno)
 
         print('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
+        lines.append('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
         print('residual volume: ', float(volume) - volume_t)
+        lines.append('residual volume: {}'.format(float(volume) - volume_t))
         print("gravity distribution: ", b.gravity)
+        lines.append('gravity distribution: {}'.format(b.gravity))
         print("***************************************************")
-        
+        return lines

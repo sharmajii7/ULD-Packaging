@@ -13,11 +13,11 @@ def packageAssigner(ulds, packages, packids):
         if(package['type'] == "Priority"):
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='olive'))
+                            weight=package['weight'], loadbear=100, updown=True, color='olive',type='Priority'))
         else:
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='pink'))
+                            weight=package['weight'], loadbear=100, updown=True, color='pink',type='Economy'))
 
     # calculate packing 
     packer.pack(

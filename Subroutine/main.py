@@ -7,7 +7,7 @@ import copy
 import streamlit as st
 class Package:
     
-    def __init__(self, partno, name, WHD, weight, loadbear, updown, color):
+    def __init__(self, partno, name, WHD, weight, loadbear, updown, color,type):
         ''' '''
         self.partno = partno
         self.name = name
@@ -21,7 +21,7 @@ class Package:
         self.rotation_type = 0
         self.position = [0, 0, 0]
         self.number_of_decimals = 0
-
+        self.type = type
 
     def formatNumbers(self, number_of_decimals):
         ''' '''
@@ -212,6 +212,7 @@ class ULD:
             if z_[j+1][0] -z_[j][1] >= top_depth:
                 return z_[j][1]
         return unfix_point[4]
+
 
 
     def checkWidth(self, unfix_point):
@@ -489,41 +490,101 @@ class Plotter:
             art3d.pathpatch_2d_to_3d(p5, z=y, zdir="y")
             art3d.pathpatch_2d_to_3d(p6, z=y + dy, zdir="y")
 
-    def plotBoxAndPackages(self,title="",alpha=0.2,write_num=False,fontsize=10):
+    def plotBoxAndPackages(self,title="",alpha=0.6,write_num=False,fontsize=10):
         """ side effective. Plot the ULD and the packages it contains. """
-        axGlob = plt.axes(projection='3d')
-        
-        # plot ULD 
-        self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
 
         # counter = 0
         # fit rotation type
         # list_ = list()
+        pri_color = [.128/0.255,.128/0.255,0/0.255]
+        eco_color = [.255/0.255, .1/0.255, .1/0.255]
         first = None
         second = None
         counter = 0
+        axGlob = plt.axes(projection='3d')
+        st.title(title)
+        axGlob.set_xticks([])  # Remove x-axis ticks
+        axGlob.set_yticks([])  # Remove y-axis ticks
+        axGlob.set_zticks([])  # Remove z-axis ticks
+
+        # Remove the axis lines (box)
+        axGlob.xaxis.pane.fill = False  # Hide x-axis background (pane)
+        axGlob.yaxis.pane.fill = False  # Hide y-axis background (pane)
+        axGlob.zaxis.pane.fill = False  # Hide z-axis background (pane)
+
+        # Hide axis lines (the box around the plot)
+        axGlob.xaxis.line.set_color('none')  # Remove x-axis line
+        axGlob.yaxis.line.set_color('none')  # Remove y-axis line
+        axGlob.zaxis.line.set_color('none')  # Remove z-axis line
+        # plt.title(title)
+        self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
+        self.packages.sort(key = lambda obj:(obj.position[2],obj.position[1],obj.position[0]))
         for package in self.packages:
+            
+            # plot ULD 
+            self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
             x,y,z = package.position
             [w,h,d] = package.getDimension()
             color = package.color
             text= package.partno if write_num else ""
-
+            if(package.type == "Priority"):
+                pri_color[0]+=0.05
+                pri_color[1]+=0.05
+                pri_color[2]+=0.05
+                if(pri_color[0]>1):
+                    pri_color[0] = 0.255
+                if(pri_color[2]>1):
+                    pri_color[2] = 0.255
+                if(pri_color[1]>1):
+                    pri_color[1] = 0.255
+                # print(color)
+                color = (pri_color[0],pri_color[1],pri_color[2])
+            else:
+                eco_color[0]+=0.05
+                eco_color[1]+=0.05
+                eco_color[2]+=0.05
+                if(eco_color[0]>1):
+                    eco_color[0] = 0.255
+                if(eco_color[2]>1):
+                    eco_color[2] = 0.255
+                if(eco_color[1]>1):
+                    eco_color[1] = 0.255
+                # print(color)
+                color = (eco_color[0],eco_color[1],eco_color[2])
             self._plotCube(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
             
             counter += 1  
-            plt.title(title)
+            
             self.setAxesEqual(axGlob)
             # plt.draw()
             first = st.pyplot(plt)
             
             # print("after uld{}".format(uld))
-            # plt.pause(0.1)
+            plt.pause(0.1)
             if(second != None):
                 second.empty()
-            # if(counter<len(self.packages)-1):
-            second = first
+            if(counter<len(self.packages)):
+                second = first
             # first.empty()
             # plt.pause(0.2)
+            axGlob.set_xticks([])  # Remove x-axis ticks
+            axGlob.set_yticks([])  # Remove y-axis ticks
+            axGlob.set_zticks([])  # Remove z-axis ticks
+
+            # Remove the axis lines (box)
+            axGlob.xaxis.pane.fill = False  # Hide x-axis background (pane)
+            axGlob.yaxis.pane.fill = False  # Hide y-axis background (pane)
+            axGlob.zaxis.pane.fill = False  # Hide z-axis background (pane)
+
+            # Hide axis lines (the box around the plot)
+            axGlob.xaxis.line.set_color('none')  # Remove x-axis line
+            axGlob.yaxis.line.set_color('none')  # Remove y-axis line
+            axGlob.zaxis.line.set_color('none')  # Remove z-axis line
+        if(first!=None):
+            first.empty()
+        if(second!=None):
+            second.empty()
+        
         return plt
 
 

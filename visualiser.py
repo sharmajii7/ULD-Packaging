@@ -14,11 +14,11 @@ def visualiser(ulds, packages, packids):
         if(package['type'] == "Priority"):
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='olive'))
+                            weight=package['weight'], loadbear=100, updown=True, color='olive', type="Priority"))
         else:
             packer.addPackage(Package(partno=package['id'], name=package['id'], 
                             WHD=(package['length'], package['width'], package['height']),
-                            weight=package['weight'], loadbear=100, updown=True, color='pink'))
+                            weight=package['weight'], loadbear=100, updown=True, color='pink', type="Economy"))
 
     # Calculate packing 
     packer.pack(
@@ -73,14 +73,16 @@ def visualiser(ulds, packages, packids):
         print("gravity distribution: ", b.gravity)
         print("***************************************************")
 
+
         painter = Plotter(b)
         fig = painter.plotBoxAndPackages(
             title=b.partno,
-            alpha=0.8,
+            alpha=1,
             write_num=True,
             fontsize=10
         )
         # fig.show()
+        # st.pyplot(fig)
         # if(len(list_)>=1):
             # list_[len(list_)-1].empty()
     return lines,fig
