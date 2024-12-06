@@ -36,3 +36,9 @@ $ streamlit run deploy.py
 After the assignment is run the output file and the file containing the ids of the packages not assigned to any uld can be downloaded.
 Also the space optimization and visualisation is also presented when the assignment function is run
 ![image](https://github.com/user-attachments/assets/93f00c02-d74d-456d-8cb4-8485f57aa8e1)
+
+### Validation of the output
+The output can be validated on all constraint grounds by running the Validaton.py file change the file path of the output file accordingly.
+```bash
+$ python Validation.py
+```
