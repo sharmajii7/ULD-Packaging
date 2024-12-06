@@ -1,7 +1,7 @@
 import time
 from packageAssigner import packageAssigner
 from visualiser import visualiser
-from spaceUtilisation import spaceUtilisation
+from spaceutilisation import spaceUtilisation
 
 def parse_file(filename):
     ulds = []
