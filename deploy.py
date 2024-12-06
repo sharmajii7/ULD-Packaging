@@ -1,9 +1,13 @@
 import streamlit as st
 import time
+import plotly.graph_objects as go
+
+import random
 # from packageAssigner import packageAssigner
 from visualiser import visualiser
 from spaceutilisation import spaceUtilisation
 from packageAssigner import packageAssigner
+
 def parse_file(file_content):
     ulds = []
     packages = []
@@ -40,6 +44,99 @@ def parse_file(file_content):
             })
     return ulds, packages, k
 
+
+def generate_random_color():
+    """Generate a random hex color."""
+    return f"#{random.randint(0, 0xFFFFFF):06x}"
+
+def parse_coordinates_from_output(file_path):
+    coordinates = []
+
+    with open(file_path, 'r') as file:
+        # Skip the first line as it seems to be metadata
+        next(file)
+
+        for line in file:
+            parts = line.strip().split(',') 
+            if parts[1]=='NONE':
+                continue
+            
+            # Assuming the 4th, 5th, and 6th values are x_start, y_start, z_start respectively
+            x_start = float(parts[2])  # The 3rd value (index 2) is x_start
+            y_start = float(parts[3])  # The 4th value (index 3) is y_start
+            z_start = float(parts[4])  # The 5th value (index 4) is z_start
+            x_end=float(parts[5])
+            y_end=float(parts[6])
+            z_end=float(parts[7])
+
+            coordinates.append((x_start, y_start, z_start,x_end,y_end,z_end))
+
+    return coordinates
+
+def visualiser(ulds, packages, packids):
+    fig = go.Figure()
+    coordinates = parse_coordinates_from_output('output.txt')  # Get coordinates from file
+
+    # Add ULDs as transparent 3D cuboids
+    for uld in ulds:
+        uld_x = [0, 0, uld['length'], uld['length'], 0, 0, uld['length'], uld['length']]
+        uld_y = [0, uld['width'], uld['width'], 0, 0, uld['width'], uld['width'], 0]
+        uld_z = [0, 0, 0, 0, uld['height'], uld['height'], uld['height'], uld['height']]
+        
+        fig.add_trace(go.Mesh3d(
+            x=uld_x,
+            y=uld_y,
+            z=uld_z,
+            color='black',
+            # i=[0, 0, 0, 1, 1, 2, 2, 4, 4, 5, 6, 7],
+            # j=[1, 2, 4, 3, 5, 3, 6, 5, 6, 6, 7, 3],
+            # k=[2, 4, 5, 2, 3, 6, 4, 6, 7, 7, 3, 5],
+            opacity=0,
+            name=f"ULD: {uld['id']}",
+            # flatshading=True
+        ))
+
+    
+    for idx, (x_start, y_start, z_start,x_end,y_end,z_end) in enumerate(coordinates):
+        color = generate_random_color()
+        
+        
+        # Assume the package size (length, width, height) is predefined or passed to the function
+        # length, width, height = packages[idx]['length'], packages[idx]['width'], packages[idx]['height']
+        
+        # x_end, y_end, z_end = x_start + length, y_start + width, z_start + height
+
+        pkg_x = [x_start, x_start, x_end, x_end, x_start, x_start, x_end, x_end]
+        pkg_y = [y_start, y_end, y_end, y_start, y_start, y_end, y_end, y_start]
+        pkg_z = [z_start, z_start, z_start, z_start, z_end, z_end, z_end, z_end]
+
+
+
+        fig.add_trace(go.Mesh3d(
+            x=pkg_x,
+            y=pkg_y,
+            z=pkg_z,
+            color=color,
+            i=[0, 0, 0, 1, 1, 2, 2, 4, 4, 5, 6, 7],
+            j=[1, 2, 4, 3, 5, 3, 6, 5, 6, 6, 7, 3],
+            k=[2, 4, 5, 2, 3, 6, 4, 6, 7, 7, 3, 5],
+            opacity=1,
+            name=f"Package {packids[idx]}",
+            # flatshading=True
+        ))
+
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(title='Length'),
+            yaxis=dict(title='Width'),
+            zaxis=dict(title='Height'),
+        ),
+        title="ULD and Package 3D Visualization"
+    )
+    
+    return fig
+
+
 def main():
     st.title("Package Assignment and ULD Optimization")
 
@@ -62,6 +159,8 @@ def main():
 
         if st.button("Run Assignment"):
             run_assignment(ulds, packages, k, x, y, z, w, d)
+
+
 
 def run_assignment(ulds, packages, k, x, y, z, w, d):
     start = time.time()
@@ -125,18 +224,15 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
     progress_bar.empty()
     status_text.empty()
 
-    uld_pack_desc = dict()
-
     for uld in ulds:
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        lines = spaceUtilisation(
+        spaceUtilisation(
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages]
         )
-        uld_pack_desc[uld['id']] = lines
 
     st.write(f"Number of priority packages not packed: {unpacked_count}")
 
@@ -153,8 +249,6 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
 
     progress_bar = st.progress(0)
     status_text = st.empty()
-    
-    not_assigned_ids = []
 
     for idx, current_package in enumerate(remaining_packages):
         assigned = False
@@ -183,7 +277,7 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
             tot_unpacked += 1
             unpackedids.append(current_package['id'])
             totcost += current_package['delaycost']
-            not_assigned_ids.append(f"{current_package['id']} ")
+            st.write(f"{current_package['id']}", end=", ")
 
     progress_bar.empty()
     status_text.empty()
@@ -203,15 +297,15 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        lines,fig = visualiser(
+        fig = visualiser(
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages],
         )
-        uld_plot = st.pyplot(fig)
-        alllines.extend(lines)
-        for line in uld_pack_desc[uld['id']]:
-            st.write(line)
+        st.plotly_chart(fig)
+
+        # uld_plot = st.pyplot(fig)
+        # alllines.extend(lines)
         # time.sleep(0.5)
         # uld_plot.empty()
 
@@ -233,12 +327,6 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
     st.download_button(
         label="Download Output",
         data=output_content,
-        file_name='output.txt',
-        mime='text/plain'
-    )
-    st.download_button(
-        label="Packages Not Assigned",
-        data=''.join(not_assigned_ids),
         file_name='output.txt',
         mime='text/plain'
     )
