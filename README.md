@@ -27,4 +27,6 @@ In this you can select your input text file and directly run the assignment from
 
 ```
 $ streamlit run deploy.py
-``` 
+```
+![image](https://github.com/user-attachments/assets/782df946-1cd4-46f1-a04c-9bdac6b9f750)
+
