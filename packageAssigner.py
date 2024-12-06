@@ -1,6 +1,6 @@
 from Subroutine import Assigner, ULD, Package
 
-def packageAssigner(ulds, packages, packids):
+def packageAssigner(ulds, packages, packids,s_s_a_r):
     # Initialize the packer
     packer = Assigner()
 
@@ -23,7 +23,7 @@ def packageAssigner(ulds, packages, packids):
     packer.pack(
         fix_point=True,
         check_stable=True,
-        support_surface_ratio=0.6
+        support_surface_ratio=s_s_a_r
     )
 
     repeated = ''

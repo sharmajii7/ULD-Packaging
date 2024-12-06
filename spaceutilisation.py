@@ -1,6 +1,6 @@
 from Subroutine import Assigner, ULD, Package
 
-def spaceUtilisation(ulds, packages, packids):
+def spaceUtilisation(ulds, packages, packids,s_s_a_r):
     # Initialize the packer
     packer = Assigner()
 
@@ -24,7 +24,7 @@ def spaceUtilisation(ulds, packages, packids):
     packer.pack(
         fix_point=True,
         check_stable=True,
-        support_surface_ratio=0.6
+        support_surface_ratio=s_s_a_r
     )
 
     repeated = ''
@@ -45,10 +45,7 @@ def spaceUtilisation(ulds, packages, packids):
             print(package.partno)
 
         print('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
-        lines.append('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
         print('residual volume: ', float(volume) - volume_t)
-        lines.append('residual volume: {}'.format(float(volume) - volume_t))
         print("gravity distribution: ", b.gravity)
-        lines.append('gravity distribution: {}'.format(b.gravity))
         print("***************************************************")
         return lines

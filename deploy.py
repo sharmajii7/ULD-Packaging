@@ -57,13 +57,12 @@ def main():
         x = st.sidebar.number_input("Enter value for x", value=5)
         y = st.sidebar.number_input("Enter value for y", value=2)
         z = st.sidebar.number_input("Enter value for z", value=1)
-        w = st.sidebar.number_input("Enter value for w", value=1)
-        d = st.sidebar.number_input("Enter value for d", value=1)
+        surface_area = st.sidebar.number_input("Enter the support surface area ratio: ", min_value=0.3, max_value=1.0, step=0.1, format="%0.1f")
 
         if st.button("Run Assignment"):
-            run_assignment(ulds, packages, k, x, y, z, w, d)
+            run_assignment(ulds, packages, k, x, y, z,surface_area)
 
-def run_assignment(ulds, packages, k, x, y, z, w, d):
+def run_assignment(ulds, packages, k, x, y, z,s_s_a_r):
     start = time.time()
 
     # Sort ULDs and packages
@@ -110,7 +109,8 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
             unpacked_count = packageAssigner(
             ulds=[uld],  # Use the current ULD
             packages=assigned_packages,  # Include already assigned + current package
-            packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+            packids=[pkg['id'] for pkg in assigned_packages],  # IDs of combined packages
+            s_s_a_r=s_s_a_r
         )
 
             if unpacked_count == 0:
@@ -131,14 +131,15 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        lines = spaceUtilisation(
+        spaceUtilisation(
             ulds=[uld],
             packages=assigned_packages,
-            packids=[pkg['id'] for pkg in assigned_packages]
+            packids=[pkg['id'] for pkg in assigned_packages],
+            s_s_a_r=s_s_a_r
         )
-        uld_pack_desc[uld['id']] = lines
+        # uld_pack_desc[uld['id']] = lines
 
-    st.write(f"Number of priority packages not packed: {unpacked_count}")
+    # st.write(f"Number of priority packages not packed: {unpacked_count}")
 
     non_empty_bins = sum(1 for bin_id, items in bin_assignments.items() if items)
     totcost += k * non_empty_bins
@@ -171,7 +172,8 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
             unpacked_count = packageAssigner(
                 ulds=[uld],  # Use the current ULD
                 packages=assigned_packages,  # Include already assigned + current package
-                packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+                packids=[pkg['id'] for pkg in assigned_packages],  # IDs of combined packages
+                s_s_a_r=s_s_a_r
             )
 
             if unpacked_count == 0:
@@ -207,11 +209,12 @@ def run_assignment(ulds, packages, k, x, y, z, w, d):
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages],
+            s_s_a_r=s_s_a_r
         )
-        uld_plot = st.pyplot(fig)
+        # uld_plot = st.pyplot(fig)
         alllines.extend(lines)
-        for line in uld_pack_desc[uld['id']]:
-            st.write(line)
+        # for line in uld_pack_desc[uld['id']]:
+        #     st.write(line)
         # time.sleep(0.5)
         # uld_plot.empty()
 

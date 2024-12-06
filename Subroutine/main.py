@@ -551,6 +551,7 @@ class Plotter:
                     eco_color[1] = 0.255
                 # print(color)
                 color = (eco_color[0],eco_color[1],eco_color[2])
+            color = package.color
             self._plotCube(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
             
             counter += 1  

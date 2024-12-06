@@ -1,6 +1,6 @@
 from Subroutine import Assigner, ULD, Package, Plotter
 import streamlit as st
-def visualiser(ulds, packages, packids):
+def visualiser(ulds, packages, packids,s_s_a_r):
     # Initialize the packer
     packer = Assigner()
 
@@ -24,7 +24,7 @@ def visualiser(ulds, packages, packids):
     packer.pack(
         fix_point=True,
         check_stable=True,
-        support_surface_ratio=0.6
+        support_surface_ratio=s_s_a_r
     )
     
     # for i in packer.packages:
@@ -64,13 +64,17 @@ def visualiser(ulds, packages, packids):
                 
             lines.append(line)
             volume_t += float(package.width) * float(package.height) * float(package.depth)
-
+        
         for package in b.unfitted_packages:
             print(package.partno)
 
         print('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
         print('residual volume: ', float(volume) - volume_t)
         print("gravity distribution: ", b.gravity)
+        uld_desc_lines = []
+        uld_desc_lines.append('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
+        uld_desc_lines.append('residual volume: {}'.format(float(volume) - volume_t))
+        uld_desc_lines.append('gravity distribution: {}'.format(b.gravity))
         print("***************************************************")
 
 
@@ -82,7 +86,9 @@ def visualiser(ulds, packages, packids):
             fontsize=10
         )
         # fig.show()
-        # st.pyplot(fig)
+        st.pyplot(fig)
         # if(len(list_)>=1):
             # list_[len(list_)-1].empty()
+        for line in uld_desc_lines:
+            st.write(line)
     return lines,fig
