@@ -1,13 +1,9 @@
 import streamlit as st
 import time
-import plotly.graph_objects as go
-
-import random
 # from packageAssigner import packageAssigner
 from visualiser import visualiser
 from spaceutilisation import spaceUtilisation
 from packageAssigner import packageAssigner
-
 def parse_file(file_content):
     ulds = []
     packages = []
@@ -44,97 +40,6 @@ def parse_file(file_content):
             })
     return ulds, packages, k
 
-
-def generate_random_color():
-
-    return {"#FF5733", "#33FF57"}
-
-def parse_coordinates_from_output(file_path):
-    coordinates = []
-
-    with open(file_path, 'r') as file:
-        # Skip the first line as it seems to be metadata
-        next(file)
-
-        for line in file:
-            parts = line.strip().split(',') 
-            if parts[1]=='NONE':
-                continue
-            
-            # Assuming the 4th, 5th, and 6th values are x_start, y_start, z_start respectively
-            x_start = float(parts[2])  # The 3rd value (index 2) is x_start
-            y_start = float(parts[3])  # The 4th value (index 3) is y_start
-            z_start = float(parts[4])  # The 5th value (index 4) is z_start
-            x_end=float(parts[5])
-            y_end=float(parts[6])
-            z_end=float(parts[7])
-
-            coordinates.append((x_start, y_start, z_start,x_end,y_end,z_end))
-
-    return coordinates
-
-def visualiser(ulds, packages, packids):
-    fig = go.Figure()
-    coordinates = parse_coordinates_from_output('output.txt')  # Get coordinates from file
-
-    priority_color = "#FF5733"  
-    economy_color = "#33FF57"  
-
-    # Add ULDs as transparent 3D cuboids
-    for uld in ulds:
-        st.title(uld['id'])
-        a = uld['length']
-        b = uld['width']
-        c = uld['height']
-        uld_x = [0,a,a,0,0,0,0,0,a,a,0,0,a,a,a,a]
-        uld_y = [0,0,b,b,0,0,b,b,b,b,b,0,0,b,0,0]
-        uld_z = [0,0,0,0,0,c,c,0,0,c,c,c,c,c,c,0]
-
-        fig.add_trace(go.Scatter3d(
-            x=uld_x,
-            y=uld_y,
-            z=uld_z,
-            # color='black',
-            mode='lines',
-            line=dict(color='black'),
-            name=f"ULD: {uld['id']}"
-
-        ))
-
-    # Add packages with colors based on their type
-    for idx, (x_start, y_start, z_start, x_end, y_end, z_end) in enumerate(coordinates):
-        # Determine color based on package type
-        pkg_type = packages[idx]['type']
-        color = priority_color if pkg_type == "Priority" else economy_color
-
-        pkg_x = [x_start, x_start, x_end, x_end, x_start, x_start, x_end, x_end]
-        pkg_y = [y_start, y_end, y_end, y_start, y_start, y_end, y_end, y_start]
-        pkg_z = [z_start, z_start, z_start, z_start, z_end, z_end, z_end, z_end]
-
-        fig.add_trace(go.Mesh3d(
-            x=pkg_x,
-            y=pkg_y,
-            z=pkg_z,
-            color=color,
-            i=[0, 0, 0, 1, 1, 2, 2, 4, 4, 5, 6, 7],
-            j=[1, 2, 4, 3, 5, 3, 6, 5, 6, 6, 7, 3],
-            k=[2, 4, 5, 2, 3, 6, 4, 6, 7, 7, 3, 5],
-            opacity=1,
-            name=f"Package {packids[idx]} ({pkg_type})"
-        ))
-
-    fig.update_layout(
-        scene=dict(
-            xaxis=dict(title='Length'),
-            yaxis=dict(title='Width'),
-            zaxis=dict(title='Height'),
-        ),
-        title=""
-    )
-
-    return fig
-
-
 def main():
     st.title("Package Assignment and ULD Optimization")
 
@@ -149,19 +54,16 @@ def main():
 
         # Input parameters
         st.sidebar.header("Sorting Parameters")
-        st.latex(r"\frac{{(delay\ cost)^x}}{{(volume)^y \cdot (weight)^d \cdot \max(edge)^z}}")
         x = st.sidebar.number_input("Enter value for x", value=7)
         y = st.sidebar.number_input("Enter value for y", value=1)
         z = st.sidebar.number_input("Enter value for z", value=4)
         d = st.sidebar.number_input("Enter value for d", value=1)
-        surface_area = st.sidebar.number_input("Enter the support surface area ratio: ", min_value=0.6, max_value=1.0, step=0.1, format="%0.1f")
+        surface_area = st.sidebar.number_input("Enter the support surface area ratio: ", min_value=0.3, max_value=1.0, step=0.1, format="%0.1f")
 
         if st.button("Run Assignment"):
-            run_assignment(ulds, packages, k, x, y, z, d,surface_area)
+            run_assignment(ulds, packages, k, x, y, z, d, surface_area)
 
-
-
-def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
+def run_assignment(ulds, packages, k, x, y, z, d, s_s_a_r):
     start = time.time()
 
     # Sort ULDs and packages
@@ -193,8 +95,6 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
     progress_bar = st.progress(0)
     status_text = st.empty()
 
-    not_assigned_ids = []
-
     for idx, current_package in enumerate(priority_packages):
         assigned = False
 
@@ -208,11 +108,10 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
             assigned_packages.append(current_package)
 
             unpacked_count = packageAssigner(
-            ulds=[uld],  
-            packages=assigned_packages,  
-            packids=[pkg['id'] for pkg in assigned_packages],  
+            ulds=[uld],  # Use the current ULD
+            packages=assigned_packages,  # Include already assigned + current package
+            packids=[pkg['id'] for pkg in assigned_packages],  # IDs of combined packages
             s_s_a_r=s_s_a_r
-
         )
 
             if unpacked_count == 0:
@@ -227,18 +126,21 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
     progress_bar.empty()
     status_text.empty()
 
+    uld_pack_desc = dict()
+    
     for uld in ulds:
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        spaceUtilisation(
+        lines = spaceUtilisation(
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages],
             s_s_a_r=s_s_a_r
         )
+        # uld_pack_desc[uld['id']] = lines
 
-    st.write(f"Number of priority packages not packed: {unpacked_count}")
+    # st.write(f"Number of priority packages not packed: {unpacked_count}")
 
     non_empty_bins = sum(1 for bin_id, items in bin_assignments.items() if items)
     totcost += k * non_empty_bins
@@ -253,6 +155,8 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
 
     progress_bar = st.progress(0)
     status_text = st.empty()
+    
+    not_assigned_ids = []
 
     for idx, current_package in enumerate(remaining_packages):
         assigned = False
@@ -269,7 +173,7 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
             unpacked_count = packageAssigner(
                 ulds=[uld],  # Use the current ULD
                 packages=assigned_packages,  # Include already assigned + current package
-                packids=[pkg['id'] for pkg in assigned_packages], # IDs of combined packages
+                packids=[pkg['id'] for pkg in assigned_packages],  # IDs of combined packages
                 s_s_a_r=s_s_a_r
             )
 
@@ -302,15 +206,16 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
         already_assigned = bin_assignments.get(uld['id'], [])
         assigned_packages = [pkg for pkg in packages if pkg['id'] in already_assigned]
 
-        fig = visualiser(
+        lines,fig = visualiser(
             ulds=[uld],
             packages=assigned_packages,
             packids=[pkg['id'] for pkg in assigned_packages],
+            s_s_a_r=s_s_a_r
         )
-        st.plotly_chart(fig)
-
         # uld_plot = st.pyplot(fig)
-        # alllines.extend(lines)
+        alllines.extend(lines)
+        # for line in uld_pack_desc[uld['id']]:
+        #     st.write(line)
         # time.sleep(0.5)
         # uld_plot.empty()
 
@@ -338,8 +243,9 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
     st.download_button(
         label="Packages Not Assigned",
         data=''.join(not_assigned_ids),
-        file_name='leftover.txt',
+        file_name='output.txt',
         mime='text/plain'
     )
+
 if __name__ == "__main__":
     main()

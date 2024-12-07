@@ -43,9 +43,12 @@ def spaceUtilisation(ulds, packages, packids,s_s_a_r =0.6):
 
         for package in b.unfitted_packages:
             print(package.partno)
-
-        print('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
-        print('residual volume: ', float(volume) - volume_t)
-        print("gravity distribution: ", b.gravity)
+        uld_desc_lines = []
+        uld_desc_lines.append('space utilization: {}%'.format(round(volume_t / float(volume) * 100, 2)))
+        uld_desc_lines.append('residual volume: {}'.format(float(volume) - volume_t))
+        uld_desc_lines.append('gravity distribution: {}'.format(b.gravity))
+        print('Space Used: {}%'.format(round(volume_t / float(volume) * 100, 2)))
+        print('Unused Volume: ', float(volume) - volume_t)
+        print("Mass Distribution: ", b.gravity)
         print("***************************************************")
-        return lines
+    return uld_desc_lines
