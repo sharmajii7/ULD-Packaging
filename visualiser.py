@@ -1,6 +1,6 @@
 from Subroutine import Assigner, ULD, Package, Plotter
 import streamlit as st
-def visualiser(ulds, packages, packids,s_s_a_r):
+def visualiser(ulds, packages, packids,s_s_a_r=0.6):
     # Initialize the packer
     packer = Assigner()
 

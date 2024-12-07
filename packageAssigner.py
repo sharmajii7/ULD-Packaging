@@ -1,6 +1,6 @@
 from Subroutine import Assigner, ULD, Package
 
-def packageAssigner(ulds, packages, packids,s_s_a_r):
+def packageAssigner(ulds, packages, packids, s_s_a_r = 0.6):
     # Initialize the packer
     packer = Assigner()
 
