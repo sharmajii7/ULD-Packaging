@@ -307,8 +307,8 @@ def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
             packids=[pkg['id'] for pkg in assigned_packages],
         )
         st.plotly_chart(fig)
-        for line in uld_desc_lines:
-            st.write(line)
+        # for line in uld_desc_lines:
+        #     st.write(line)
         # uld_plot = st.pyplot(fig)
         # alllines.extend(lines)
         # time.sleep(0.5)

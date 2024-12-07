@@ -32,7 +32,10 @@ In this you can select your input text file and directly run the assignment from
 ```
 $ streamlit run deploy.py
 ```
-
+In order to get interactive visualization of the packages use:
+```
+$ streamlit run deployOld.py
+```
 After the assignment is run the output file and the file containing the ids of the packages not assigned to any uld can be downloaded.
 Also the space optimization and visualisation is also presented when the assignment function is run
 ![image](/Streamlit_SS.png)
