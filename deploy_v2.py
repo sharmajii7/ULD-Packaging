@@ -46,8 +46,8 @@ def parse_file(file_content):
 
 
 def generate_random_color():
-    """Generate a random hex color."""
-    return f"#{random.randint(0, 0xFFFFFF):06x}"
+
+    return {"#FF5733", "#33FF57"}
 
 def parse_coordinates_from_output(file_path):
     coordinates = []
@@ -77,40 +77,35 @@ def visualiser(ulds, packages, packids):
     fig = go.Figure()
     coordinates = parse_coordinates_from_output('output.txt')  # Get coordinates from file
 
+    priority_color = "#FF5733"  
+    economy_color = "#33FF57"  
+
     # Add ULDs as transparent 3D cuboids
     for uld in ulds:
         uld_x = [0, 0, uld['length'], uld['length'], 0, 0, uld['length'], uld['length']]
         uld_y = [0, uld['width'], uld['width'], 0, 0, uld['width'], uld['width'], 0]
         uld_z = [0, 0, 0, 0, uld['height'], uld['height'], uld['height'], uld['height']]
-        
-        fig.add_trace(go.Mesh3d(
+
+        fig.add_trace(go.Scatter3d(
             x=uld_x,
             y=uld_y,
             z=uld_z,
-            color='black',
-            # i=[0, 0, 0, 1, 1, 2, 2, 4, 4, 5, 6, 7],
-            # j=[1, 2, 4, 3, 5, 3, 6, 5, 6, 6, 7, 3],
-            # k=[2, 4, 5, 2, 3, 6, 4, 6, 7, 7, 3, 5],
-            opacity=0,
-            name=f"ULD: {uld['id']}",
-            # flatshading=True
+            # color='black',
+            mode='lines',
+            line=dict(color='black'),
+            name=f"ULD: {uld['id']}"
+
         ))
 
-    
-    for idx, (x_start, y_start, z_start,x_end,y_end,z_end) in enumerate(coordinates):
-        color = generate_random_color()
-        
-        
-        # Assume the package size (length, width, height) is predefined or passed to the function
-        # length, width, height = packages[idx]['length'], packages[idx]['width'], packages[idx]['height']
-        
-        # x_end, y_end, z_end = x_start + length, y_start + width, z_start + height
+    # Add packages with colors based on their type
+    for idx, (x_start, y_start, z_start, x_end, y_end, z_end) in enumerate(coordinates):
+        # Determine color based on package type
+        pkg_type = packages[idx]['type']
+        color = priority_color if pkg_type == "Priority" else economy_color
 
         pkg_x = [x_start, x_start, x_end, x_end, x_start, x_start, x_end, x_end]
         pkg_y = [y_start, y_end, y_end, y_start, y_start, y_end, y_end, y_start]
         pkg_z = [z_start, z_start, z_start, z_start, z_end, z_end, z_end, z_end]
-
-
 
         fig.add_trace(go.Mesh3d(
             x=pkg_x,
@@ -121,8 +116,7 @@ def visualiser(ulds, packages, packids):
             j=[1, 2, 4, 3, 5, 3, 6, 5, 6, 6, 7, 3],
             k=[2, 4, 5, 2, 3, 6, 4, 6, 7, 7, 3, 5],
             opacity=1,
-            name=f"Package {packids[idx]}",
-            # flatshading=True
+            name=f"Package {packids[idx]} ({pkg_type})"
         ))
 
     fig.update_layout(
@@ -133,7 +127,7 @@ def visualiser(ulds, packages, packids):
         ),
         title="ULD and Package 3D Visualization"
     )
-    
+
     return fig
 
 
@@ -151,17 +145,19 @@ def main():
 
         # Input parameters
         st.sidebar.header("Sorting Parameters")
-        x = st.sidebar.number_input("Enter value for x", value=5)
-        y = st.sidebar.number_input("Enter value for y", value=2)
-        z = st.sidebar.number_input("Enter value for z", value=1)
+        st.latex(r"\frac{{(delay\ cost)^x}}{{(volume)^y \cdot (weight)^d \cdot \max(edge)^z}}")
+        x = st.sidebar.number_input("Enter value for x", value=7)
+        y = st.sidebar.number_input("Enter value for y", value=1)
+        z = st.sidebar.number_input("Enter value for z", value=4)
         d = st.sidebar.number_input("Enter value for d", value=1)
+        surface_area = st.sidebar.number_input("Enter the support surface area ratio: ", min_value=0.6, max_value=1.0, step=0.1, format="%0.1f")
 
         if st.button("Run Assignment"):
-            run_assignment(ulds, packages, k, x, y, z, d)
+            run_assignment(ulds, packages, k, x, y, z, d,surface_area)
 
 
 
-def run_assignment(ulds, packages, k, x, y, z, d):
+def run_assignment(ulds, packages, k, x, y, z, d,s_s_a_r):
     start = time.time()
 
     # Sort ULDs and packages
@@ -206,9 +202,11 @@ def run_assignment(ulds, packages, k, x, y, z, d):
             assigned_packages.append(current_package)
 
             unpacked_count = packageAssigner(
-            ulds=[uld],  # Use the current ULD
-            packages=assigned_packages,  # Include already assigned + current package
-            packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+            ulds=[uld],  
+            packages=assigned_packages,  
+            packids=[pkg['id'] for pkg in assigned_packages],  
+            s_s_a_r=s_s_a_r
+
         )
 
             if unpacked_count == 0:
@@ -230,7 +228,8 @@ def run_assignment(ulds, packages, k, x, y, z, d):
         spaceUtilisation(
             ulds=[uld],
             packages=assigned_packages,
-            packids=[pkg['id'] for pkg in assigned_packages]
+            packids=[pkg['id'] for pkg in assigned_packages],
+            s_s_a_r=s_s_a_r
         )
 
     st.write(f"Number of priority packages not packed: {unpacked_count}")
@@ -264,7 +263,8 @@ def run_assignment(ulds, packages, k, x, y, z, d):
             unpacked_count = packageAssigner(
                 ulds=[uld],  # Use the current ULD
                 packages=assigned_packages,  # Include already assigned + current package
-                packids=[pkg['id'] for pkg in assigned_packages]  # IDs of combined packages
+                packids=[pkg['id'] for pkg in assigned_packages], # IDs of combined packages
+                s_s_a_r=s_s_a_r
             )
 
             if unpacked_count == 0:
